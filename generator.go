@@ -10,19 +10,27 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/manifoldco/promptui"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // Question struct for questions file.
 type Question struct {
-	Name    string   `json:"name"`
-	Type    string   `json:"type"`
-	Prompt  string   `json:"prompt"`
-	Default string   `json:"default"`
-	Options []string `json:"options,omitempty"`
+	Name    string   `yaml:"name"`
+	Type    string   `yaml:"type"`
+	Prompt  string   `yaml:"prompt"`
+	Default string   `yaml:"default"`
+	Options []string `yaml:"options,omitempty"`
+}
+
+// Config - the config.yaml
+type Config struct {
+	Version   string      `yaml:"version"`
+	Questions []*Question `yaml:"questions"`
 }
 
 // Generator struct
@@ -32,8 +40,8 @@ type Generator struct {
 	Destination   string
 	QuestionsFile string
 	TemplateFiles string
-	Questions     []*Question
-	Answers       map[string]string
+	Config        *Config
+	Answers       map[string]interface{}
 }
 
 func (gen *Generator) init(name, src string) error {
@@ -42,10 +50,9 @@ func (gen *Generator) init(name, src string) error {
 	gen.Source = src
 	gen.Name = name
 	gen.Destination = path.Join(".", gen.Name)
-	gen.QuestionsFile = path.Join(gen.Source, "questions.json")
+	gen.QuestionsFile = path.Join(gen.Source, "config.yaml")
 	gen.TemplateFiles = path.Join(gen.Source, "template")
-
-	gen.Answers["TimeStamp"] = time.Now().UTC().Format(time.RFC3339)
+	gen.Config = &Config{}
 
 	// check for required project structure
 	if _, err := os.Stat(gen.TemplateFiles); os.IsNotExist(err) {
@@ -53,9 +60,19 @@ func (gen *Generator) init(name, src string) error {
 	}
 
 	if _, err := os.Stat(gen.QuestionsFile); os.IsNotExist(err) {
-		log.Printf("%s does not have a questions.json file, so it may not actually be a cgen template...", gen.Source)
+		log.Printf("%s does not have a questions.yaml file, so it may not actually be a cgen template...", gen.Source)
 	}
 
+	yamlFile, err := os.Open(gen.QuestionsFile)
+	if err != nil {
+		return err
+	}
+	defer yamlFile.Close()
+	byteValue, _ := ioutil.ReadAll(yamlFile)
+	yaml.Unmarshal(byteValue, &gen.Config)
+
+	gen.Answers["TemplateVersion"] = gen.Config.Version
+	gen.Answers["Timestamp"] = time.Now().UTC().Format(time.RFC3339)
 	return nil
 }
 
@@ -117,9 +134,27 @@ func (gen *Generator) walkFiles(inPath string, file os.FileInfo, err error) erro
 	if filepath.Ext(inPath) == ".tmpl" {
 		outPath = strings.Replace(outPath, filepath.Ext(outPath), "", 1)
 		fmt.Printf("Processing Template File %s\n", inPath)
-
 		fmt.Printf("Generating Template: %s\n", inPath)
-		var templateFile = template.Must(template.ParseFiles(inPath))
+
+		var helpers = template.FuncMap{
+			"ToTitle": strings.Title,
+			"ToUpper": strings.ToUpper,
+			"ToLower": strings.ToLower,
+			"Replace": strings.Replace,
+			"MkdirAll": func(p string) (err error) {
+				err = os.MkdirAll(path.Join(gen.Destination, p), 0700)
+				return err
+			},
+			"Touch": func(p string) (err error) {
+				_, err = os.Create(path.Join(gen.Destination, p))
+				return err
+			},
+		}
+
+		templateFile, err := template.New(file.Name()).Funcs(helpers).ParseFiles(inPath)
+		if err != nil {
+			return err
+		}
 
 		generated, err := os.Create(outPath)
 		if err != nil {
@@ -132,29 +167,17 @@ func (gen *Generator) walkFiles(inPath string, file os.FileInfo, err error) erro
 	} else {
 		gen.copy(inPath, outPath)
 	}
-	// if the file name starts with an _ then parse it as a template.
-	// else read the file as is and spit it out
-	// todo: how would we update the template later?
+
 	return nil // no errors
 }
 
 func (gen *Generator) prompt() error {
-	var questions = []*Question{}
-
-	jsonFile, err := os.Open(gen.QuestionsFile)
-	if err != nil {
-		return err
-	}
-	defer jsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, &questions)
-
-	for _, q := range questions {
+	for _, q := range gen.Config.Questions {
 		res, err := gen.ask(*q)
+		fmt.Printf("You choose %q\n", res)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("You choose %q\n", res)
 	}
 
 	return nil
@@ -163,7 +186,11 @@ func (gen *Generator) prompt() error {
 func (gen *Generator) ask(q Question) (answer string, err error) {
 	// init answers
 	if gen.Answers == nil {
-		gen.Answers = make(map[string]string)
+		gen.Answers = make(map[string]interface{})
+	}
+
+	if val := os.Getenv(q.Name); val != "" {
+		return gen.appendAnswer(q.Name, val), nil
 	}
 
 	switch q.Type {
@@ -174,13 +201,23 @@ func (gen *Generator) ask(q Question) (answer string, err error) {
 		}
 		answer, err = prompt.Run()
 	case "bool":
+		truthRE := "(?i)^true|y"
+
+		if match, _ := regexp.MatchString(truthRE, q.Default); match {
+			q.Default = "y"
+		}
+
 		prompt := promptui.Prompt{
 			Label:     q.Prompt,
 			IsConfirm: true,
-			Default:   "n",
+			Default:   q.Default,
 		}
-		answer, err = prompt.Run()
-		if answer == "y" {
+		answer, _ = prompt.Run()
+		if answer == "" {
+			answer = q.Default
+		}
+
+		if match, _ := regexp.MatchString(truthRE, answer); match {
 			answer = "true"
 		} else {
 			answer = "false"
@@ -191,7 +228,6 @@ func (gen *Generator) ask(q Question) (answer string, err error) {
 			Items: q.Options,
 		}
 		_, answer, err = prompt.Run()
-
 	default:
 		return "", fmt.Errorf("invalid question type %s", q.Type)
 	}
@@ -200,7 +236,19 @@ func (gen *Generator) ask(q Question) (answer string, err error) {
 		return "", err
 	}
 
+	return gen.appendAnswer(q.Name, answer), nil
+}
+
+func (gen *Generator) appendAnswer(name, val string) (answer string) {
 	// append answer to the answers map.
-	gen.Answers[q.Name] = answer
-	return answer, nil
+	switch val {
+	case "true":
+		gen.Answers[name] = true
+	case "false":
+		gen.Answers[name] = false
+	default:
+		gen.Answers[name] = val
+	}
+
+	return val
 }

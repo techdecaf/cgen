@@ -7,6 +7,8 @@ import (
 	"path"
 )
 
+// todo: write tests.
+// version - todo: figure out how to bump this.
 var version string = "0.0.1"
 
 func main() {
@@ -16,13 +18,15 @@ func main() {
 	}
 	// CLI Flags
 	gitURL := flag.String("install", "", "install a generator using a git clone compatable url cgen -install <url>")
+	project := flag.String("tmpl", "", "specify a which template you would like to use.")
+	name := flag.String("name", "", "what would you like to name your new project")
 	doList := flag.Bool("list", false, "lists all installed generators")
 	doVersion := flag.Bool("version", false, "prints cgen version number")
 	flag.Parse()
 
 	if *doVersion != false {
 		fmt.Println(version)
-		return 
+		return
 	}
 
 	if *doList != false {
@@ -49,25 +53,29 @@ func main() {
 		log.Fatal(err)
 	}
 
-	project, err := app.Generator.ask(Question{
-		Name:    "Template",
-		Type:    "select",
-		Prompt:  "Pick a template.",
-		Options: installedGenerators,
-	})
+	if *project == "" {
+		*project, err = app.Generator.ask(Question{
+			Name:    "Template",
+			Type:    "select",
+			Prompt:  "Pick a template.",
+			Options: installedGenerators,
+		})
+	}
 
-	name, err := app.Generator.ask(Question{
-		Name:    "Name",
-		Type:    "string",
-		Prompt:  "What do you want to call your project",
-		Default: "temp-project",
-	})
+	if *name == "" {
+		*name, err = app.Generator.ask(Question{
+			Name:    "Name",
+			Type:    "string",
+			Prompt:  "What do you want to call your project",
+			Default: "temp-project",
+		})
+	}
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := app.Generator.init(name, path.Join(app.TemplatesDir, project)); err != nil {
+	if err := app.Generator.init(*name, path.Join(app.TemplatesDir, *project)); err != nil {
 		log.Fatal(err)
 	}
 	// app.Generator.toJSON()
