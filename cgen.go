@@ -1,14 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"os/user"
 	"path"
 	"strings"
-
-	git "gopkg.in/src-d/go-git.v4"
 )
 
 // CGen application
@@ -44,13 +45,32 @@ func (app *CGen) init() (err error) {
 func (app *CGen) install(url string) (err error) {
 	// what to name the generator dir.
 	as := strings.TrimSuffix(path.Base(url), path.Ext(url))
+	dir := path.Join(app.TemplatesDir, as)
 
-	_, err = git.PlainClone(path.Join(app.TemplatesDir, as), false, &git.CloneOptions{
-		URL:      url,
-		Progress: os.Stdout,
-	})
+	cmd := exec.Command("git", "clone", url, dir)
+	stderr, _ := cmd.StderrPipe()
+	stdout, _ := cmd.StdoutPipe()
+	cmd.Start()
 
-	return err
+	scanErr := bufio.NewScanner(stderr)
+	for scanErr.Scan() {
+		fmt.Println(scanErr.Text())
+	}
+
+	scanOut := bufio.NewScanner(stdout)
+	for scanOut.Scan() {
+		fmt.Println(scanOut.Text())
+	}
+
+	return cmd.Wait()
+	// if err != nil {
+	//     // something went wrong
+	// }
+
+	// _, err = git.PlainClone(dir, false, &git.CloneOptions{
+	// 	URL:      url,
+	// 	Progress: os.Stdout,
+	// })
 }
 
 func (app *CGen) update(name string) (err error) {
