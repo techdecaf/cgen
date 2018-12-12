@@ -1,7 +1,7 @@
 HELP_SPACING=15
 PACKAGE_NAME=cgen
 # This version-strategy uses git tags to set the version string
-VERSION := $(shell git describe --tags --always --dirty)
+VERSION := $(shell git describe --tags --always --dirty --abbrev=0)
 #
 # This version-strategy uses a manual value to set the version string
 #VERSION := 1.2.3
@@ -13,13 +13,19 @@ install: ## Install all the build and lint dependencies
 	# gometalinter --install --update
 	@$(MAKE) dep
 
-.PHONY: bump-patch
+	
+.PHONY: bump-patch bump-minor bump-major version
+
+version:
+	@echo $(VERSION)
 bump-patch:
 	$(eval NEW_VERSION := $(shell echo $(VERSION)| awk -F. -v OFS=. -v f=3 '{ $$f++ } 1'))
 	git tag -a $(NEW_VERSION) -m "patch release"
+
 bump-minor:
 	$(eval NEW_VERSION := $(shell echo $(VERSION)| awk -F. -v OFS=. -v f=2 '{ $$f++ } 1'))
 	git tag -a $(NEW_VERSION) -m "minor release"
+
 bump-major:
 	$(eval NEW_VERSION := $(shell echo $(VERSION)| awk -F. -v OFS=. -v f=1 '{ $$f++ } 1'))
 	git tag -a $(NEW_VERSION) -m "breaking change"
