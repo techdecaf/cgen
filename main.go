@@ -7,9 +7,9 @@ import (
 	"path"
 )
 
-// todo: write tests.
-// version - todo: figure out how to bump this.
-var version string = "0.0.2"
+// todo: write tests
+// version - This is converted to the git tag at compile time using the make build command.
+var VERSION string
 
 func main() {
 	var app = &CGen{}
@@ -25,7 +25,7 @@ func main() {
 	flag.Parse()
 
 	if *doVersion != false {
-		fmt.Println(version)
+		fmt.Println(VERSION)
 		return
 	}
 
