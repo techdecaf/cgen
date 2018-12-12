@@ -1,2 +1,6 @@
 [*]
 tab_width = 2
+
+[{Makefile,makefile}]
+# Use tabs for indentation (Makefiles require tabs)
+indent_style = tab
