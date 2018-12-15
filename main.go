@@ -4,7 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"path"
+	"path/filepath"
 )
 
 // todo: write tests
@@ -21,23 +23,14 @@ func main() {
 	project := flag.String("tmpl", "", "specify a which template you would like to use.")
 	name := flag.String("name", "", "what would you like to name your new project")
 	doList := flag.Bool("list", false, "lists all installed generators")
+
+	doUpgrade := flag.Bool("upgrade", false, "attempts to update the current directory, if it's already a cgen project")
 	doVersion := flag.Bool("version", false, "prints cgen version number")
 	flag.Parse()
 
 	if *doVersion != false {
 		fmt.Println(VERSION)
-		return
-	}
-
-	if *doList != false {
-		if installed, err := app.listInstalled(); err != nil {
-			log.Fatal(err)
-		} else {
-			for _, template := range installed {
-				fmt.Println(path.Join(app.TemplatesDir, template))
-			}
-			return
-		}
+		os.Exit(0)
 	}
 
 	// install handler
@@ -45,7 +38,7 @@ func main() {
 		if err := app.install(*gitURL); err != nil {
 			log.Fatal(err)
 		}
-		return
+		os.Exit(0)
 	}
 
 	installedGenerators, err := app.listInstalled()
@@ -53,6 +46,35 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if *doList != false {
+		for _, template := range installedGenerators {
+			fmt.Println(path.Join(app.TemplatesDir, template))
+		}
+		os.Exit(0)
+	}
+
+	// PERFORM UPGRADE
+	if *doUpgrade == true {
+		currentDir, _ := filepath.Abs(".")
+		stat, err := os.Stat(currentDir)
+		if err != nil {
+			log.Fatal(err)
+		}
+		*name = stat.Name()
+		*project = "PerformUpgrade"
+
+		confirm, err := app.Generator.ask(Question{
+			Name:    "Confirm",
+			Type:    "bool",
+			Prompt:  fmt.Sprintf("Are you sure you want to upgrade [%s]", *name),
+			Default: "false",
+		})
+		if confirm == "false" {
+			os.Exit(0)
+		}
+	}
+
+	// PERFORM PROJECT GENERATION
 	if *project == "" {
 		*project, err = app.Generator.ask(Question{
 			Name:    "Template",
@@ -75,7 +97,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := app.Generator.init(*name, path.Join(app.TemplatesDir, *project)); err != nil {
+	if err := app.Generator.init(*name, *project, app.TemplatesDir); err != nil {
 		log.Fatal(err)
 	}
 	// app.Generator.toJSON()

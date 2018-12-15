@@ -18,6 +18,11 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+type Output struct {
+	Template string                 `yaml:"template"`
+	Answers  map[string]interface{} `yaml:"answers"`
+}
+
 // Question struct for questions file.
 type Question struct {
 	Name    string   `yaml:"name"`
@@ -30,7 +35,9 @@ type Question struct {
 // Config - the config.yaml
 type Config struct {
 	Version   string      `yaml:"version"`
+	From      string      `yaml:"from"`
 	Questions []*Question `yaml:"questions"`
+	Post      []string    `yaml:"post"`
 }
 
 // Generator struct
@@ -39,17 +46,46 @@ type Generator struct {
 	Source        string
 	Destination   string
 	QuestionsFile string
+	AnswersFile   string
 	TemplateFiles string
+	TemplateName  string
+	TemplatesDir  string
 	Config        *Config
 	Answers       map[string]interface{}
 }
 
-func (gen *Generator) init(name, src string) error {
+func (gen *Generator) init(name, template, src string) error {
 	// todo: validate inputs, that files exist etc
 	// default destination to current working directory or use project name
-	gen.Source = src
+
+	// check to see if an answers file exists in current dir
+	answerFile := path.Join(".", ".cgen.yaml")
+	if _, err := os.Stat(answerFile); !os.IsNotExist(err) {
+		update := Output{}
+
+		answersYAML, err := os.Open(answerFile)
+		if err != nil {
+			return err
+		}
+		defer answersYAML.Close()
+		byteValue, _ := ioutil.ReadAll(answersYAML)
+		yaml.Unmarshal(byteValue, &update)
+
+		gen.Answers = update.Answers
+		gen.TemplateName = update.Template
+		gen.Destination = "."
+	} else {
+		gen.TemplateName = template
+		gen.Destination = path.Join(".", gen.Name)
+	}
+
+	fmt.Println(gen)
+	// path to generators
 	gen.Name = name
-	gen.Destination = path.Join(".", gen.Name)
+	gen.TemplatesDir = src
+
+	gen.Source = path.Join(gen.TemplatesDir, gen.TemplateName)
+	gen.AnswersFile = path.Join(gen.Destination, ".cgen.yaml")
 	gen.QuestionsFile = path.Join(gen.Source, "config.yaml")
 	gen.TemplateFiles = path.Join(gen.Source, "template")
 	gen.Config = &Config{}
@@ -63,12 +99,12 @@ func (gen *Generator) init(name, src string) error {
 		log.Printf("%s does not have a questions.yaml file, so it may not actually be a cgen template...", gen.Source)
 	}
 
-	yamlFile, err := os.Open(gen.QuestionsFile)
+	configYAML, err := os.Open(gen.QuestionsFile)
 	if err != nil {
 		return err
 	}
-	defer yamlFile.Close()
-	byteValue, _ := ioutil.ReadAll(yamlFile)
+	defer configYAML.Close()
+	byteValue, _ := ioutil.ReadAll(configYAML)
 	yaml.Unmarshal(byteValue, &gen.Config)
 
 	gen.Answers["TemplateVersion"] = gen.Config.Version
@@ -80,7 +116,15 @@ func (gen *Generator) exec() error {
 	if err := gen.prompt(); err != nil {
 		return err
 	}
-	err := filepath.Walk(gen.TemplateFiles, gen.walkFiles)
+
+	if err := filepath.Walk(gen.TemplateFiles, gen.walkFiles); err != nil {
+		return err
+	}
+
+	ans, err := gen.save()
+	if err := ioutil.WriteFile(gen.Destination+"/.cgen.yaml", ans, 0644); err != nil {
+		return err
+	}
 
 	return err
 }
@@ -193,6 +237,10 @@ func (gen *Generator) ask(q Question) (answer string, err error) {
 		return gen.appendAnswer(q.Name, val), nil
 	}
 
+	if val := gen.Answers[q.Name]; val != nil {
+		return fmt.Sprintf("%v", val), nil
+	}
+
 	switch q.Type {
 	case "string":
 		prompt := promptui.Prompt{
@@ -251,4 +299,14 @@ func (gen *Generator) appendAnswer(name, val string) (answer string) {
 	}
 
 	return val
+}
+
+func (gen *Generator) save() (out []byte, err error) {
+	output := Output{}
+	output.Answers = gen.Answers
+	output.Template = gen.TemplateName
+
+	res, err := yaml.Marshal(output)
+	fmt.Println(string(res))
+	return res, err
 }
