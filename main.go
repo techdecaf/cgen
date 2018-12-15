@@ -19,28 +19,42 @@ func main() {
 		log.Fatal(err)
 	}
 	// CLI Flags
-	gitURL := flag.String("install", "", "install a generator using a git clone compatable url cgen -install <url>")
-	project := flag.String("tmpl", "", "specify a which template you would like to use.")
 	name := flag.String("name", "", "what would you like to name your new project")
-	doList := flag.Bool("list", false, "lists all installed generators")
+	project := flag.String("tmpl", "", "specify a which template you would like to use.")
 
+	// utilities
+	install := flag.String("install", "", "install a generator using a git clone compatable url cgen -install <url>")
+	bump := flag.String("bump", "", "bumps the {major | minor | patch | pre-release string} version of the current directory using git tags.")
+
+	doList := flag.Bool("list", false, "lists all installed generators")
 	doUpgrade := flag.Bool("upgrade", false, "attempts to update the current directory, if it's already a cgen project")
 	doVersion := flag.Bool("version", false, "prints cgen version number")
 	flag.Parse()
 
+	// Utility functions
 	if *doVersion != false {
 		fmt.Println(VERSION)
 		os.Exit(0)
 	}
 
 	// install handler
-	if *gitURL != "" {
-		if err := app.install(*gitURL); err != nil {
+	if *install != "" {
+		if err := app.install(*install); err != nil {
 			log.Fatal(err)
 		}
 		os.Exit(0)
 	}
 
+	if *bump != "" {
+		ver, err := app.bump(*bump)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(ver)
+		os.Exit(0)
+	}
+
+	// Main Package
 	installedGenerators, err := app.listInstalled()
 	if err != nil {
 		log.Fatal(err)
