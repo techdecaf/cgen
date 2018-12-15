@@ -13,27 +13,10 @@ install: ## Install all the build and lint dependencies
 	# gometalinter --install --update
 	@$(MAKE) dep
 
-	
-.PHONY: bump-patch bump-minor bump-major version
-
-version: ## prints the current version tag
-	@echo $(VERSION)
-bump-patch: ## bumps patch version
-	$(eval NEW_VERSION := $(shell echo $(VERSION)| awk -F. -v OFS=. -v f=3 '{ $$f++ } 1'))
-	git tag -a $(NEW_VERSION) -m "patch release"
-
-bump-minor: ## bumps minor version
-	$(eval NEW_VERSION := $(shell echo $(VERSION)| awk -F. -v OFS=. -v f=2 '{ $$f++ } 1'))
-	git tag -a $(NEW_VERSION) -m "minor release"
-
-bump-major: ## bumps major version
-	$(eval NEW_VERSION := $(shell echo $(VERSION)| awk -F. -v OFS=. -v f=1 '{ $$f++ } 1'))
-	git tag -a $(NEW_VERSION) -m "breaking change"
-
 build: 
 	go build -ldflags "-X main.VERSION=$(VERSION)" -o $(PACKAGE_NAME) -v
 
-.PHONY: test cover dep clean release
+.PHONY: test cover dep clean release version
 test: ## Run all the tests
 	echo 'mode: atomic' > coverage.txt && go test -covermode=atomic -coverprofile=coverage.txt -v -race -timeout=30s ./...
 
@@ -45,6 +28,9 @@ dep: ## Run dep ensure and prune
 
 clean: ## Remove temporary files
 	go clean
+
+version: ## prints the current version tag
+	@echo $(VERSION)
 
 release:
 	git push origin $(VERSION)
