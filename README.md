@@ -5,17 +5,43 @@ Simply run `cgen` to get started!
 
 - [cgen Project Generator](#cgen-project-generator)
   - [Use](#use)
+    - [Bumping a projects version](#bumping-a-projects-version)
     - [Installing a template](#installing-a-template)
-  - [Creating a template plug-in](#creating-a-template-plug-in)
-    - [Operators](#operators)
-  - [Updating a template](#updating-a-template)
+    - [Upgrading an existing Template](#upgrading-an-existing-template)
+  - [Creating Your own Template Plugin](#creating-your-own-template-plugin)
+    - [Template Operators Operators](#template-operators-operators)
 
 ## Use
 
+```bash
+Usage of cgen:
+  -bump string
+        #bumps the {major | minor | patch | pre-release string} version of the current directory using git tags.
+  -install string
+        #install a generator using a git clone compatable url cgen -install <url>
+  -list
+        #lists all installed generators
+  -name string
+        #what would you like to name your new project
+  -tmpl string
+        #specify a which template you would like to use.
+  -upgrade
+        #attempts to update the current directory, if it's already a cgen project
+  -version
+        #prints cgen version number
+```
+
+### Bumping a projects version
+
+This utility function works on any git repository, not just one created using cgen.  Since most projects generate with cgen will use git, we found it helpful to include this features.
+
 ### Installing a template
+
 `cgen -instal https://github.com/nullstyle/go-codegen`
 
-## Creating a template plug-in
+### Upgrading an existing Template
+
+## Creating Your own Template Plugin
 
 You can actually use `cgen` to create a `cgen` template :tada:
 `cgen -install github.com/techdecaf/cgen-template` `cgen -tmpl cgen-template`
@@ -33,7 +59,7 @@ You can actually use `cgen` to create a `cgen` template :tada:
 {{- end }}
 ```
 
-### Operators
+### Template Operators Operators
 
 - eq - Returns the boolean truth of arg1 == arg2
 - ne - Returns the boolean truth of arg1 != arg2
@@ -41,5 +67,3 @@ You can actually use `cgen` to create a `cgen` template :tada:
 - le - Returns the boolean truth of arg1 <= arg2
 - gt - Returns the boolean truth of arg1 > arg2
 - ge - Returns the boolean truth of arg1 >= arg2
-
-## Updating a template
