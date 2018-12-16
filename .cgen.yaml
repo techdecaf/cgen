@@ -1,0 +1,9 @@
+template: project
+answers:
+  Author: dev@techdecaf.com
+  Description: na
+  Language: golang
+  Name: cgen
+  ProjectClass: tools
+  TemplateVersion: 0.0.1
+  Timestamp: "2018-12-16T14:38:07Z"
