@@ -28,6 +28,7 @@ dep: ## Run dep ensure and prune
 
 clean: ## Remove temporary files
 	go clean
+	rm -rf .dist
 
 version: ## prints the current version tag
 	@echo $(VERSION)
