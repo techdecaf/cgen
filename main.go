@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -54,7 +55,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Main Package
 	installedGenerators, err := app.listInstalled()
 	if err != nil {
 		log.Fatal(err)
@@ -67,14 +67,26 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Main Package
+	// resolve current directory.
+	pwd, _ := filepath.Abs(".")
+	thisDir, err := os.Stat(pwd)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// check to see if directory is dirty.
+	if files, err := ioutil.ReadDir("./"); err != nil {
+		log.Fatal(err)
+	} else {
+		if len(files) != 0 {
+			fmt.Println("WARNING: This directory is not empty.")
+		}
+	}
+
 	// PERFORM UPGRADE
 	if *doUpgrade == true {
-		currentDir, _ := filepath.Abs(".")
-		stat, err := os.Stat(currentDir)
-		if err != nil {
-			log.Fatal(err)
-		}
-		*name = stat.Name()
+		*name = thisDir.Name()
 		*project = "PerformUpgrade"
 
 		confirm, err := app.Generator.ask(Question{
@@ -83,6 +95,11 @@ func main() {
 			Prompt:  fmt.Sprintf("Are you sure you want to upgrade [%s]", *name),
 			Default: "false",
 		})
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		if confirm == "false" {
 			os.Exit(0)
 		}
@@ -102,8 +119,8 @@ func main() {
 		*name, err = app.Generator.ask(Question{
 			Name:    "Name",
 			Type:    "string",
-			Prompt:  "What do you want to call your project",
-			Default: "temp-project",
+			Prompt:  "What do you want to call your project ",
+			Default: thisDir.Name(),
 		})
 	}
 
@@ -111,10 +128,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := app.Generator.init(*name, *project, app.TemplatesDir); err != nil {
+	if err := app.Generator.init(*name, *project, app.TemplatesDir, *doUpgrade); err != nil {
 		log.Fatal(err)
 	}
 	// app.Generator.toJSON()
+
 	if err := app.Generator.exec(); err != nil {
 		log.Fatal(err)
 	}

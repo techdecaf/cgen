@@ -54,13 +54,17 @@ type Generator struct {
 	Answers       map[string]interface{}
 }
 
-func (gen *Generator) init(name, template, src string) error {
+func (gen *Generator) init(name, template, src string, upgrade bool) error {
 	// todo: validate inputs, that files exist etc
 	// default destination to current working directory or use project name
 
 	// check to see if an answers file exists in current dir
 	answerFile := path.Join(".", ".cgen.yaml")
-	if _, err := os.Stat(answerFile); !os.IsNotExist(err) {
+	if upgrade {
+		// ensure answer file exists
+		if _, err := os.Stat(answerFile); err != nil {
+			return err
+		}
 		update := Output{}
 
 		answersYAML, err := os.Open(answerFile)
@@ -73,18 +77,16 @@ func (gen *Generator) init(name, template, src string) error {
 
 		gen.Answers = update.Answers
 		gen.TemplateName = update.Template
-		gen.Destination = "."
 	} else {
 		gen.TemplateName = template
-		gen.Destination = path.Join(".", gen.Name)
 	}
 
-	fmt.Println(gen)
 	// path to generators
 	gen.Name = name
 	gen.TemplatesDir = src
-
 	gen.Source = path.Join(gen.TemplatesDir, gen.TemplateName)
+
+	gen.Destination = "."
 	gen.AnswersFile = path.Join(gen.Destination, ".cgen.yaml")
 	gen.QuestionsFile = path.Join(gen.Source, "config.yaml")
 	gen.TemplateFiles = path.Join(gen.Source, "template")
@@ -107,8 +109,8 @@ func (gen *Generator) init(name, template, src string) error {
 	byteValue, _ := ioutil.ReadAll(configYAML)
 	yaml.Unmarshal(byteValue, &gen.Config)
 
-	gen.Answers["TemplateVersion"] = gen.Config.Version
-	gen.Answers["Timestamp"] = time.Now().UTC().Format(time.RFC3339)
+	gen.appendAnswer("TemplateVersion", gen.Config.Version)
+	gen.appendAnswer("Timestamp", time.Now().UTC().Format(time.RFC3339))
 	return nil
 }
 
@@ -210,6 +212,7 @@ func (gen *Generator) walkFiles(inPath string, file os.FileInfo, err error) erro
 		}
 	} else {
 		gen.copy(inPath, outPath)
+		fmt.Printf("Copying File: %s\n", outPath)
 	}
 
 	return nil // no errors
@@ -228,10 +231,6 @@ func (gen *Generator) prompt() error {
 }
 
 func (gen *Generator) ask(q Question) (answer string, err error) {
-	// init answers
-	if gen.Answers == nil {
-		gen.Answers = make(map[string]interface{})
-	}
 
 	if val := os.Getenv(q.Name); val != "" {
 		return gen.appendAnswer(q.Name, val), nil
@@ -288,6 +287,9 @@ func (gen *Generator) ask(q Question) (answer string, err error) {
 }
 
 func (gen *Generator) appendAnswer(name, val string) (answer string) {
+	if gen.Answers == nil {
+		gen.Answers = make(map[string]interface{})
+	}
 	// append answer to the answers map.
 	switch val {
 	case "true":
