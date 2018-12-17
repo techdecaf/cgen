@@ -13,8 +13,8 @@ install: ## Install all the build and lint dependencies
 	# gometalinter --install --update
 	@$(MAKE) dep
 
-build: 
-	go build -ldflags "-X main.VERSION=$(VERSION)" -o $(PACKAGE_NAME) -v
+build:
+	go build -ldflags "-X main.VERSION=$(VERSION)" -o .dist/$(PACKAGE_NAME) -v
 
 .PHONY: test cover dep clean release version
 test: ## Run all the tests
