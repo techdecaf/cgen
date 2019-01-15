@@ -99,16 +99,16 @@ func (app *CGen) listInstalled() (installed []string, err error) {
 func (app *CGen) bump(place string) (version string, err error) {
 	place = strings.ToLower(strings.TrimSpace(place))
 	if out, err := exec.Command("git", "describe", "--tags", "--always", "--dirty", "--abbrev=0").Output(); err != nil {
+		//TODO: catch git with no commit history
 		return "", err
 	} else {
 		version = strings.TrimSpace(string(out))
-
 		// check to make sure git repository is not dirty before performing a bump
 		if strings.Contains(version, "dirty") {
-			return "", fmt.Errorf("UncommittedChanges: please stash or commit the current changes before bumping the version.")
+			return "", fmt.Errorf("uncommitted changes: please stash or commit the current changes before bumping the version")
 		}
 
-		v, err := semver.Make(version)
+		v, _ := semver.Make(version)
 
 		switch place {
 		case "major":
