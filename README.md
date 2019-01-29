@@ -1,3 +1,8 @@
+
+<p align="center">
+  <img alt="cgen" src="https://images.techdecaf.com/fit-in/100x/techdecaf/cgen_logo.png" width="100" />
+</p>
+
 # cgen Project Generator
 
 This project is designed to be a cross platform plugin-based project generator.
