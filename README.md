@@ -14,16 +14,31 @@ Simply run `cgen` to get started!
   - [Creating a template plug-in](#creating-a-template-plug-in)
     - [Operators](#operators)
   - [Updating a template](#updating-a-template)
+  - [Bumping a project version](#bumping-a-project-version)
 
 ## Use
 
 ### Installing a template
-`cgen -instal https://github.com/nullstyle/go-codegen`
+
+cgen :heart_eyes: plugins, but it does not use package managment, instead you can just reference any git repository that you have access to.
+
+```bash
+cgen -install https://github.com/techdecaf/cgen-template
+```
 
 ## Creating a template plug-in
 
 You can actually use `cgen` to create a `cgen` template :tada:
-`cgen -install github.com/techdecaf/cgen-template` `cgen -tmpl cgen-template`
+
+> NOTE: make sure you have the cgen template generator installed as shown above, then...
+
+```bash
+cgen -tmpl cgen-template
+```
+
+We use the go template engine to create your project, you can find detailed documentation here:
+
+You can also take a look at the [cgen-template](https://github.com/techdecaf/cgen-template) project for more information on use.
 
 - [Go Template Documentation](https://golang.org/pkg/html/template/)
 - [todo: link to examples](/examples)
@@ -48,3 +63,13 @@ You can actually use `cgen` to create a `cgen` template :tada:
 - ge - Returns the boolean truth of arg1 >= arg2
 
 ## Updating a template
+
+cgen creates an answer file in the root of your project, if you wish to upgrade your project with a newer version of your installed template just `cd <project_dir>` and `cgn  -upgrade`.
+
+## Bumping a project version
+
+Wait, what? Why does a generator do this?
+
+we added a bump feature to cgen to help with your projects life cycle, frequently we end up using many different tools to change the version of a project depending on the language we are using.  However we felt that git was the correct place to bump and release new versions of our code.  So you can also use cgen to handle this for you.
+
+To use run `cgen -bump <major | minor | patch | pre-release string>` and cgen will update your git tags with a new semver.
