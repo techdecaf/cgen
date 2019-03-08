@@ -27,6 +27,7 @@ func main() {
 	install := flag.String("install", "", "install a generator using a git clone compatable url cgen -install <url>")
 	bump := flag.String("bump", "", "bumps the {major | minor | patch | pre-release string} version of the current directory using git tags.")
 
+	staticOnly := flag.Bool("static-only", false, "does not generate template files (most commonly used with update)")
 	doList := flag.Bool("list", false, "lists all installed generators")
 	doUpgrade := flag.Bool("upgrade", false, "attempts to update the current directory, if it's already a cgen project")
 	doVersion := flag.Bool("version", false, "prints cgen version number")
@@ -128,7 +129,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := app.Generator.init(*name, *project, app.TemplatesDir, *doUpgrade); err != nil {
+	if err := app.Generator.init(*name, *project, app.TemplatesDir, *doUpgrade, *staticOnly); err != nil {
 		log.Fatal(err)
 	}
 	// app.Generator.toJSON()

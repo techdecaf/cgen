@@ -96,51 +96,53 @@ func (app *CGen) listInstalled() (installed []string, err error) {
 	return installed, err
 }
 
-func (app *CGen) bump(place string) (version string, err error) {
+func (app *CGen) bump(place string) (version string, gitErr error) {
 	place = strings.ToLower(strings.TrimSpace(place))
-	if out, err := exec.Command("git", "describe", "--tags", "--always", "--dirty", "--abbrev=0").Output(); err != nil {
-		//TODO: catch git with no commit history
-		return "", err
-	} else {
-		version = strings.TrimSpace(string(out))
-		// check to make sure git repository is not dirty before performing a bump
-		if strings.Contains(version, "dirty") {
-			return "", fmt.Errorf("uncommitted changes: please stash or commit the current changes before bumping the version")
-		}
 
-		v, _ := semver.Make(version)
-
-		switch place {
-		case "major":
-			v.Major++
-			v.Minor = 0
-			v.Patch = 0
-		case "minor":
-			v.Minor++
-			v.Patch = 0
-		case "patch":
-			v.Patch++
-		default:
-			v.Pre[0], err = semver.NewPRVersion(place)
-		}
-
-		// bump using git tag
-		cmd := exec.Command("git", "tag", "-a", v.String(), "-m", fmt.Sprintf("[bump] cgen -bump %s", place))
-		stderr, _ := cmd.StderrPipe()
-		stdout, _ := cmd.StdoutPipe()
-		cmd.Start()
-
-		scanErr := bufio.NewScanner(stderr)
-		for scanErr.Scan() {
-			fmt.Println(scanErr.Text())
-		}
-
-		scanOut := bufio.NewScanner(stdout)
-		for scanOut.Scan() {
-			fmt.Println(scanOut.Text())
-		}
-
-		cmd.Wait()
-		return v.String(), err
+	out, gitErr := exec.Command("git", "describe", "--tags", "--always", "--dirty", "--abbrev=0").Output()
+	if gitErr != nil {
+		return "", gitErr
 	}
+	version = strings.TrimSpace(string(out))
+
+	// check to make sure git repository is not dirty before performing a bump
+	//TODO: catch git with no commit history
+	if strings.Contains(version, "dirty") {
+		return "", fmt.Errorf("uncommitted changes: please stash or commit the current changes before bumping the version")
+	}
+
+	v, _ := semver.Make(version)
+
+	switch place {
+	case "major":
+		v.Major++
+		v.Minor = 0
+		v.Patch = 0
+	case "minor":
+		v.Minor++
+		v.Patch = 0
+	case "patch":
+		v.Patch++
+	default:
+		v.Pre[0], gitErr = semver.NewPRVersion(place)
+	}
+
+	// bump using git tag
+	cmd := exec.Command("git", "tag", "-a", v.String(), "-m", fmt.Sprintf("[bump] cgen -bump %s", place))
+	stderr, _ := cmd.StderrPipe()
+	stdout, _ := cmd.StdoutPipe()
+	cmd.Start()
+
+	scanErr := bufio.NewScanner(stderr)
+	for scanErr.Scan() {
+		fmt.Println(scanErr.Text())
+	}
+
+	scanOut := bufio.NewScanner(stdout)
+	for scanOut.Scan() {
+		fmt.Println(scanOut.Text())
+	}
+
+	cmd.Wait()
+	return v.String(), gitErr
 }

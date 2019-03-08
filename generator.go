@@ -52,12 +52,17 @@ type Generator struct {
 	TemplatesDir  string
 	Config        *Config
 	Answers       map[string]interface{}
+	Options       struct {
+		StaticOnly bool
+	}
 }
 
-func (gen *Generator) init(name, template, src string, upgrade bool) error {
+func (gen *Generator) init(name, template, src string, upgrade, staticOnly bool) error {
+	// set options
+	gen.Options.StaticOnly = staticOnly
+
 	// todo: validate inputs, that files exist etc
 	// default destination to current working directory or use project name
-
 	// check to see if an answers file exists in current dir
 	answerFile := path.Join(".", ".cgen.yaml")
 	if upgrade {
@@ -168,16 +173,25 @@ func (gen *Generator) copy(src, dst string) error {
 }
 
 func (gen *Generator) walkFiles(inPath string, file os.FileInfo, err error) error {
+	// identify template files
+	isTemplate := filepath.Ext(inPath) == ".tmpl"
+
 	// skip all directories
 	if file.IsDir() {
 		return nil
 	}
+
+	// skip template files if we are only generating statics.
+	if isTemplate && gen.Options.StaticOnly == true {
+		return nil
+	}
+
 	outPath := strings.Replace(inPath, gen.TemplateFiles, gen.Destination, 1)
 	if err := os.MkdirAll(filepath.Dir(outPath), 0700); err != nil {
 		return err
 	}
 
-	if filepath.Ext(inPath) == ".tmpl" {
+	if isTemplate {
 		outPath = strings.Replace(outPath, filepath.Ext(outPath), "", 1)
 		fmt.Printf("Processing Template File %s\n", inPath)
 		fmt.Printf("Generating Template: %s\n", inPath)
