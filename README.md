@@ -23,19 +23,21 @@ Simply run `cgen` to get started!
 ```bash
 Usage of cgen:
   -bump string
-        #bumps the {major | minor | patch | pre-release string} version of the current directory using git tags.
+        # bumps the {major | minor | patch | pre-release string} version of the current directory using git tags.
   -install string
-        #install a generator using a git clone compatable url cgen -install <url>
+        # install a generator using a git clone compatable url cgen -install <url>
   -list
-        #lists all installed generators
+        # lists all installed generators
   -name string
-        #what would you like to name your new project
+        # what would you like to name your new project
+  -static-only
+        # does not generate template files (most commonly used with update)
   -tmpl string
-        #specify a which template you would like to use.
+        # specify a which template you would like to use.
   -upgrade
-        #attempts to update the current directory, if it's already a cgen project
+        # attempts to update the current directory, if it's already a cgen project
   -version
-        #prints cgen version number
+        # prints cgen version number
 ```
 
 ### Bumping a projects version
