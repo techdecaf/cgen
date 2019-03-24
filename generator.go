@@ -56,19 +56,21 @@ type Generator struct {
 	Config          *Config
 	Answers         map[string]interface{}
 	Options         struct {
-		StaticOnly bool
+		StaticOnly     bool
+		PerformUpgrade bool
 	}
 }
 
 func (gen *Generator) init(name, cgenTemplate, src string, upgrade, staticOnly bool) error {
 	// set options
 	gen.Options.StaticOnly = staticOnly
+	gen.Options.PerformUpgrade = upgrade
 
 	// todo: validate inputs, that files exist etc
 	// default destination to current working directory or use project name
 	// check to see if an answers file exists in current dir
 	answerFile := path.Join(".", ".cgen.yaml")
-	if upgrade {
+	if gen.Options.PerformUpgrade {
 		// ensure answer file exists
 		if _, err := os.Stat(answerFile); err != nil {
 			return err
@@ -152,11 +154,12 @@ func (gen *Generator) exec() error {
 		return err
 	}
 
-	// run scripts in config.run_after array.
-	if err := gen.runAfter(); err != nil {
-		return err
+	if !gen.Options.PerformUpgrade {
+		// run scripts in config.run_after array.
+		if err := gen.runAfter(); err != nil {
+			return err
+		}
 	}
-
 	return err
 }
 
