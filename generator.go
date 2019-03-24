@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -8,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -37,27 +39,28 @@ type Config struct {
 	Version   string      `yaml:"version"`
 	From      string      `yaml:"from"`
 	Questions []*Question `yaml:"questions"`
-	Post      []string    `yaml:"post"`
+	RunAfter  []string    `yaml:"run_after"`
 }
 
 // Generator struct
 type Generator struct {
-	Name          string
-	Source        string
-	Destination   string
-	QuestionsFile string
-	AnswersFile   string
-	TemplateFiles string
-	TemplateName  string
-	TemplatesDir  string
-	Config        *Config
-	Answers       map[string]interface{}
-	Options       struct {
+	Name            string
+	Source          string
+	Destination     string
+	QuestionsFile   string
+	AnswersFile     string
+	TemplateFiles   string
+	TemplateName    string
+	TemplatesDir    string
+	TemplateHelpers template.FuncMap
+	Config          *Config
+	Answers         map[string]interface{}
+	Options         struct {
 		StaticOnly bool
 	}
 }
 
-func (gen *Generator) init(name, template, src string, upgrade, staticOnly bool) error {
+func (gen *Generator) init(name, cgenTemplate, src string, upgrade, staticOnly bool) error {
 	// set options
 	gen.Options.StaticOnly = staticOnly
 
@@ -83,7 +86,7 @@ func (gen *Generator) init(name, template, src string, upgrade, staticOnly bool)
 		gen.Answers = update.Answers
 		gen.TemplateName = update.Template
 	} else {
-		gen.TemplateName = template
+		gen.TemplateName = cgenTemplate
 	}
 
 	// path to generators
@@ -96,6 +99,21 @@ func (gen *Generator) init(name, template, src string, upgrade, staticOnly bool)
 	gen.QuestionsFile = path.Join(gen.Source, "config.yaml")
 	gen.TemplateFiles = path.Join(gen.Source, "template")
 	gen.Config = &Config{}
+
+	gen.TemplateHelpers = template.FuncMap{
+		"ToTitle": strings.Title,
+		"ToUpper": strings.ToUpper,
+		"ToLower": strings.ToLower,
+		"Replace": strings.Replace,
+		"MkdirAll": func(relativePath string) (err error) {
+			err = os.MkdirAll(path.Join(gen.Destination, relativePath), 0700)
+			return err
+		},
+		"Touch": func(relativePath string) (err error) {
+			_, err = os.Create(path.Join(gen.Destination, relativePath))
+			return err
+		},
+	}
 
 	// check for required project structure
 	if _, err := os.Stat(gen.TemplateFiles); os.IsNotExist(err) {
@@ -128,8 +146,14 @@ func (gen *Generator) exec() error {
 		return err
 	}
 
+	// save output to projct_root/.cgen.yaml
 	ans, err := gen.save()
 	if err := ioutil.WriteFile(gen.Destination+"/.cgen.yaml", ans, 0644); err != nil {
+		return err
+	}
+
+	// run scripts in config.run_after array.
+	if err := gen.runAfter(); err != nil {
 		return err
 	}
 
@@ -196,22 +220,7 @@ func (gen *Generator) walkFiles(inPath string, file os.FileInfo, err error) erro
 		fmt.Printf("Processing Template File %s\n", inPath)
 		fmt.Printf("Generating Template: %s\n", inPath)
 
-		var helpers = template.FuncMap{
-			"ToTitle": strings.Title,
-			"ToUpper": strings.ToUpper,
-			"ToLower": strings.ToLower,
-			"Replace": strings.Replace,
-			"MkdirAll": func(p string) (err error) {
-				err = os.MkdirAll(path.Join(gen.Destination, p), 0700)
-				return err
-			},
-			"Touch": func(p string) (err error) {
-				_, err = os.Create(path.Join(gen.Destination, p))
-				return err
-			},
-		}
-
-		templateFile, err := template.New(file.Name()).Funcs(helpers).ParseFiles(inPath)
+		templateFile, err := template.New(file.Name()).Funcs(gen.TemplateHelpers).ParseFiles(inPath)
 		if err != nil {
 			return err
 		}
@@ -325,4 +334,30 @@ func (gen *Generator) save() (out []byte, err error) {
 	res, err := yaml.Marshal(output)
 	fmt.Println(string(res))
 	return res, err
+}
+
+// run all commands found in config.yaml run_after prop.
+func (gen *Generator) runAfter() (err error) {
+	for _, cmd := range gen.Config.RunAfter {
+		var command bytes.Buffer
+
+		cmdTemplate, err := template.New("cmd").Funcs(gen.TemplateHelpers).Parse(cmd)
+		if err != nil {
+			return err
+		}
+		if err := cmdTemplate.Execute(&command, gen.Answers); err != nil {
+			return err
+		}
+
+		split := strings.Split(command.String(), " ")
+		head := split[0]
+		arguments := split[1:len(split)]
+
+		out, err := exec.Command(head, arguments...).Output()
+		fmt.Printf("%s\n", out)
+		if err != nil {
+			return err
+		}
+	}
+	return err
 }
