@@ -356,7 +356,7 @@ func (gen *Generator) runAfter() (err error) {
 		split := strings.Split(command.String(), " ")
 		name := split[0]
 		arguments := split[1:len(split)]
-		return execute(name, arguments...)
+		execute(name, arguments...)
 	}
 	return err
 }
