@@ -24,7 +24,7 @@ func main() {
 	project := flag.String("tmpl", "", "specify a which template you would like to use.")
 
 	// utilities
-	install := flag.String("install", "", "install a generator using a git clone compatable url cgen -install <url>")
+	install := flag.String("install", "", "install a generator using a git clone compatible url cgen -install <url>")
 	bump := flag.String("bump", "", "bumps the {major | minor | patch | pre-release string} version of the current directory using git tags.")
 
 	staticOnly := flag.Bool("static-only", false, "does not generate template files (most commonly used with update)")
