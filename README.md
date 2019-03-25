@@ -3,70 +3,66 @@
   <img alt="cgen" src="https://images.techdecaf.com/fit-in/100x/techdecaf/cgen_logo.png" width="100" />
 </p>
 
-# cgen Project Generator
+# cgen project generator
 
 This project is designed to be a cross platform plugin-based project generator.
 Simply run `cgen` to get started!
 
-- [cgen Project Generator](#cgen-project-generator)
-  - [Use](#use)
-    - [Bumping a projects version](#bumping-a-projects-version)
-    - [Installing a template](#installing-a-template)
-    - [Upgrading an existing Template](#upgrading-an-existing-template)
+- [cgen project generator](#cgen-project-generator)
+  - [Installing a template](#installing-a-template)
   - [Creating Your own Template Plugin](#creating-your-own-template-plugin)
-    - [Template Operators Operators](#template-operators-operators)
+  - [Template Operators Operators](#template-operators-operators)
   - [Updating a template](#updating-a-template)
+    - [Full project generation](#full-project-generation)
+    - [Updating static files only](#updating-static-files-only)
   - [Bumping a project version](#bumping-a-project-version)
-
-## Use
 
 ```bash
 Usage of cgen:
   -bump string
-        # bumps the {major | minor | patch | pre-release string} version of the current directory using git tags.
+    # bumps the {major | minor | patch | pre-release string} version of the current directory using git tags.
   -install string
-        # install a generator using a git clone compatable url cgen -install <url>
+    # install a generator using a git clone compatible url cgen -install <url>
   -list
-        # lists all installed generators
+    # lists all installed generators
   -name string
-        # what would you like to name your new project
+    # what would you like to name your new project
   -static-only
-        # does not generate template files (most commonly used with update)
+    # does not generate template files (most commonly used with update)
   -tmpl string
-        # specify a which template you would like to use.
+    # specify a which template you would like to use.
   -upgrade
-        # attempts to update the current directory, if it's already a cgen project
+    # attempts to update the current directory, if it's already a cgen project
   -version
-        # prints cgen version number
+    # prints cgen version number
 ```
 
-### Bumping a projects version
+## Installing a template
 
-This utility function works on any git repository, not just one created using cgen.  Since most projects generate with cgen will use git, we found it helpful to include this features.
-
-### Installing a template
-
-cgen :heart_eyes: plugins, but it does not use package managment, instead you can just reference any git repository that you have access to.
+cgen :heart_eyes: plugins, but it does not use package management, instead you can just reference any git repository that you have access to.
 
 ```bash
 cgen -install https://github.com/techdecaf/cgen-template
 ```
 
-### Upgrading an existing Template
-
 ## Creating Your own Template Plugin
 
 You can actually use `cgen` to create a `cgen` template :tada:
 
-> NOTE: make sure you have the cgen template generator installed as shown above, then...
-
 ```bash
+# install the cgen template generator for templates
+cgen -install https://github.com/techdecaf/cgen-template
+
+# create a new directory for your template
+mkdir my-new-template
+
+# execute cgen, follow the prompts
 cgen -tmpl cgen-template
 ```
 
-We use the go template engine to create your project, you can find detailed documentation here:
+You can take a look at the [cgen-template](https://github.com/techdecaf/cgen-template) project for more information on use and details for how to create your own templates.
 
-You can also take a look at the [cgen-template](https://github.com/techdecaf/cgen-template) project for more information on use.
+We use the go template engine to create your project, you can find detailed documentation here:
 
 - [Go Template Documentation](https://golang.org/pkg/html/template/)
 - [todo: link to examples](/examples)
@@ -81,7 +77,7 @@ You can also take a look at the [cgen-template](https://github.com/techdecaf/cge
 {{- end }}
 ```
 
-### Template Operators Operators
+## Template Operators Operators
 
 - eq - Returns the boolean truth of arg1 == arg2
 - ne - Returns the boolean truth of arg1 != arg2
@@ -92,7 +88,18 @@ You can also take a look at the [cgen-template](https://github.com/techdecaf/cge
 
 ## Updating a template
 
+### Full project generation
+
 cgen creates an answer file in the root of your project, if you wish to upgrade your project with a newer version of your installed template just `cd <project_dir>` and `cgn  -upgrade`.
+
+### Updating static files only
+
+> static files: are any files that do not end in `.tmpl`
+
+```bash
+cd <my_project_dir>
+cgen -upgrade -staticOnly
+```
 
 ## Bumping a project version
 
