@@ -246,7 +246,7 @@ func (gen *Generator) walkFiles(inPath string, file os.FileInfo, err error) erro
 func (gen *Generator) prompt() error {
 	for _, q := range gen.Config.Questions {
 		res, err := gen.ask(*q)
-		fmt.Printf("You choose %q\n", res)
+		fmt.Printf("%s: %q\n", q.Name, res)
 		if err != nil {
 			return err
 		}
@@ -266,6 +266,8 @@ func (gen *Generator) ask(q Question) (answer string, err error) {
 	}
 
 	switch q.Type {
+	case "constant":
+		answer = q.Default
 	case "string":
 		prompt := promptui.Prompt{
 			Label:   q.Prompt,
