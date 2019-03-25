@@ -49,30 +49,7 @@ func (app *CGen) install(url string) (err error) {
 	as := strings.TrimSuffix(path.Base(url), path.Ext(url))
 	dir := path.Join(app.TemplatesDir, as)
 
-	cmd := exec.Command("git", "clone", url, dir)
-	stderr, _ := cmd.StderrPipe()
-	stdout, _ := cmd.StdoutPipe()
-	cmd.Start()
-
-	scanErr := bufio.NewScanner(stderr)
-	for scanErr.Scan() {
-		fmt.Println(scanErr.Text())
-	}
-
-	scanOut := bufio.NewScanner(stdout)
-	for scanOut.Scan() {
-		fmt.Println(scanOut.Text())
-	}
-
-	return cmd.Wait()
-	// if err != nil {
-	//     // something went wrong
-	// }
-
-	// _, err = git.PlainClone(dir, false, &git.CloneOptions{
-	// 	URL:      url,
-	// 	Progress: os.Stdout,
-	// })
+	return execute("git", "clone", url, dir)
 }
 
 func (app *CGen) update(name string) (err error) {

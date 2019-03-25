@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -352,15 +351,12 @@ func (gen *Generator) runAfter() (err error) {
 			return err
 		}
 
-		split := strings.Split(command.String(), " ")
-		head := split[0]
-		arguments := split[1:len(split)]
+		fmt.Printf("RunningCommand: %s \n", command.String())
 
-		out, err := exec.Command(head, arguments...).Output()
-		fmt.Printf("%s\n", out)
-		if err != nil {
-			return err
-		}
+		split := strings.Split(command.String(), " ")
+		name := split[0]
+		arguments := split[1:len(split)]
+		return execute(name, arguments...)
 	}
 	return err
 }
