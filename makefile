@@ -1,7 +1,7 @@
 HELP_SPACING=15
 PACKAGE_NAME=cgen
+PACKAGE_VERSION := $(shell git describe --tags --always --dirty --abbrev=0)
 # This version-strategy uses git tags to set the version string
-VERSION := $(shell git describe --tags --always --dirty --abbrev=0)
 #
 # This version-strategy uses a manual value to set the version string
 #VERSION := 1.2.3
@@ -13,10 +13,11 @@ install: ## Install all the build and lint dependencies
 	# gometalinter --install --update
 	@$(MAKE) dep
 
-build:
-	go build -ldflags "-X main.VERSION=$(VERSION)" -o .dist/$(PACKAGE_NAME) -v
+build: clean ## complie window, linux, osx x64
+	# @export GOARCH=amd64
+	GOOS=windows go build -ldflags "-X main.VERSION=$(PACKAGE_VERSION)" -o .dist/windows/$(PACKAGE_NAME).exe -v
+	GOOS=darwin go build -ldflags "-X main.VERSION=$(PACKAGE_VERSION)" -o .dist/osx/$(PACKAGE_NAME) -v
 
-.PHONY: test cover dep clean release version
 test: ## Run all the tests
 	echo 'mode: atomic' > coverage.txt && go test -covermode=atomic -coverprofile=coverage.txt -v -race -timeout=30s ./...
 
@@ -31,14 +32,15 @@ clean: ## Remove temporary files
 	rm -rf .dist
 
 version: ## prints the current version tag
-	@echo $(VERSION)
+	@echo $(PACKAGE_VERSION)
 
-release:
-	git push origin $(VERSION)
+publish: ## push build to s3
+	aws s3 sync ./dist $(S3_BUCKET)/$(PACKAGE_NAME)/$(PACKAGE_VERSION)
 
 # Absolutely awesome: http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
-.PHONY: help
 help: ## Print help text
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-$(HELP_SPACING)s\033[0m %s\n", $$1, $$2}'
 
+.PHONY: install build test cover dep clean version publish help
 .DEFAULT_GOAL := help
+
