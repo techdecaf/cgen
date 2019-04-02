@@ -56,14 +56,19 @@ type Generator struct {
 	Options         struct {
 		StaticOnly     bool `json:"StaticOnly"`
 		PerformUpgrade bool `json:"PerformUpgrade"`
+		Verbose        bool `json:"Verbose"`
 	}
 }
 
 func (gen *Generator) init(params GeneratorParams) error {
-	params.toJSON()
 	// set options
 	gen.Options.StaticOnly = params.StaticOnly
 	gen.Options.PerformUpgrade = params.PerformUpgrade
+	gen.Options.Verbose = params.Verbose
+
+	if gen.Options.Verbose {
+		params.toJSON()
+	}
 
 	// todo: validate inputs, that files exist etc
 	// default destination to current working directory or use project name

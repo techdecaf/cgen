@@ -30,6 +30,8 @@ func main() {
 	doList := flag.Bool("list", false, "lists all installed generators")
 	doUpgrade := flag.Bool("upgrade", false, "attempts to update the current directory, if it's already a cgen project")
 	doVersion := flag.Bool("version", false, "prints cgen version number")
+	verbose := flag.Bool("verbose", false, "displays verbose messages")
+
 	flag.Parse()
 
 	// Utility functions
@@ -135,6 +137,7 @@ func main() {
 		Destination:    pwd,              // destination directory for generated files
 		PerformUpgrade: *doUpgrade,       // perform upgrade
 		StaticOnly:     *staticOnly,      // only copy static files, no template interpolation
+		Verbose:        *verbose,         // use verbose logging
 	}
 
 	if err := app.Generator.init(params); err != nil {

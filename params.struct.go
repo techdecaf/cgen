@@ -13,6 +13,7 @@ type GeneratorParams struct {
 	Destination    string `json:"Destination"`    // destination directory for generated files
 	PerformUpgrade bool   `json:"PerformUpgrade"` // perform upgrade
 	StaticOnly     bool   `json:"StaticOnly"`     // only copy static files, no template interpolation
+	Verbose        bool   `json:"Verbose"`        // use verbose logging
 }
 
 func (params *GeneratorParams) toJSON() error {
