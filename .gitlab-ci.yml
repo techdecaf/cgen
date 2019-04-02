@@ -47,6 +47,6 @@ deploy:
   stage: build
   script:
     - make build
-    - - eval $(curl -s $DECAF_URL/keys/aws/set/env/linux/website-update?jwt=$DECAF_TOKEN)
+    - eval $(curl -s $DECAF_URL/keys/aws/set/env/linux/website-update?jwt=$DECAF_TOKEN)
   only:
     - master
