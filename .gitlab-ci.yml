@@ -3,23 +3,26 @@
 # This file is a template, and might need editing before it works on your project.
 # Official framework image. Look for the different tagged releases at:
 # https://hub.docker.com/r/library/node/tags/
-image: techdecaf/ci:latest
+image: golang:1.11-alpine
 # image: node:8.11-alpine
 
-variables:
-  DECAF_VAR: "value"
+# variables:
+#   DECAF_VAR: "value"
 
 # This folder is cached between builds
 # http://docs.gitlab.com/ce/ci/yaml/README.html#cache
 cache:
   paths:
-  - node_modules/
-  - .npmrc
+    - /apt-cache
+    - /go/src/github.com
+    - /go/src/golang.org
+    - /go/src/google.golang.org
+    - /go/src/gopkg.in
 
 # run in order.
 stages:
   - test
-  - deploy
+  - build
 
 # Pick zero or more services to be used on all builds.
 # Only needed when using a docker container to run your tests in.
@@ -32,25 +35,18 @@ services:
 
 # runs before each job
 before_script:
-  - echo this runs before each job
+  - apk add make aws-cli
 
 test:
   stage: test
   script:
-    - curl -s "$DECAF_URL/keys/npm/npmrc?jwt=$DECAF_TOKEN" > .npmrc
-    - npm install
-    - npm run ci
-  coverage: /All files\s*\|\s*([\d\.]+)/
-  cache:
-    paths:
-    - node_modules/
-    - .npmrc
+    - make install
+  # coverage: /All files\s*\|\s*([\d\.]+)/
 
-# deployment
 deploy:
-  stage: deploy
+  stage: build
   script:
-    - npm run deploy --unsafe-perm
-  # an array of permitted branches
+    - make build
+    - - eval $(curl -s $DECAF_URL/keys/aws/set/env/linux/website-update?jwt=$DECAF_TOKEN)
   only:
     - master
