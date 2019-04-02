@@ -35,18 +35,19 @@ services:
 
 # runs before each job
 before_script:
-  - apk add make aws-cli
+  - apk add make curl
 
 test:
   stage: test
   script:
-    - make install
+    - make clean install test
   # coverage: /All files\s*\|\s*([\d\.]+)/
 
 deploy:
+  image: mesosphere/aws-cli:1.14.5
   stage: build
   script:
-    - make build
-    - eval $(curl -s $DECAF_URL/keys/aws/set/env/linux/website-update?jwt=$DECAF_TOKEN)
+    - eval $(curl -s "$DECAF_URL/keys/aws/set/env/linux/website-update?jwt=$DECAF_TOKEN")
+    - make build publish
   only:
     - master

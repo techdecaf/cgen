@@ -1,6 +1,7 @@
 HELP_SPACING=15
 PACKAGE_NAME=cgen
 PACKAGE_VERSION := $(shell git describe --tags --always --dirty --abbrev=0)
+S3_BUCKET := github.techdecaf.io
 # This version-strategy uses git tags to set the version string
 #
 # This version-strategy uses a manual value to set the version string
@@ -35,7 +36,7 @@ version: ## prints the current version tag
 	@echo $(PACKAGE_VERSION)
 
 publish: ## push build to s3
-	aws s3 sync ./dist $(S3_BUCKET)/$(PACKAGE_NAME)/$(PACKAGE_VERSION)
+	@aws s3 sync .dist s3://$(S3_BUCKET)/$(PACKAGE_NAME)/$(PACKAGE_VERSION)
 
 # Absolutely awesome: http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help: ## Print help text
