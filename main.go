@@ -132,10 +132,13 @@ func main() {
 	if err := app.Generator.init(*name, *project, app.TemplatesDir, *doUpgrade, *staticOnly); err != nil {
 		log.Fatal(err)
 	}
-	// app.Generator.toJSON()
+
+	// print configuration
+	if err := app.Generator.print(); err != nil {
+		log.Fatal(err)
+	}
 
 	if err := app.Generator.exec(); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(app.Generator)
 }

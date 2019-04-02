@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
@@ -43,20 +42,20 @@ type Config struct {
 
 // Generator struct
 type Generator struct {
-	Name            string
-	Source          string
-	Destination     string
-	QuestionsFile   string
-	AnswersFile     string
-	TemplateFiles   string
-	TemplateName    string
-	TemplatesDir    string
+	Name            string `json:"Name"`
+	Source          string `json:"Source"`
+	Destination     string `json:"Destination"`
+	QuestionsFile   string `json:"QuestionsFile"`
+	AnswersFile     string `json:"AnswersFile"`
+	TemplateFiles   string `json:"TemplateFiles"`
+	TemplateName    string `json:"TemplateName"`
+	TemplatesDir    string `json:"TemplatesDir"`
 	TemplateHelpers template.FuncMap
-	Config          *Config
-	Answers         map[string]interface{}
+	Config          *Config                `json:"Config"`
+	Answers         map[string]interface{} `json:"Answers"`
 	Options         struct {
-		StaticOnly     bool
-		PerformUpgrade bool
+		StaticOnly     bool `json:"StaticOnly"`
+		PerformUpgrade bool `json:"PerformUpgrade"`
 	}
 }
 
@@ -162,14 +161,8 @@ func (gen *Generator) exec() error {
 	return err
 }
 
-func (gen *Generator) toJSON() error {
-	json, err := json.Marshal(gen)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(json))
-
+func (gen *Generator) print() error {
+	fmt.Printf("%+v\n", gen)
 	return nil
 }
 
