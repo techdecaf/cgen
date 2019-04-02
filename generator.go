@@ -101,9 +101,9 @@ func (gen *Generator) init(params GeneratorParams) error {
 	gen.Source = path.Join(gen.TemplatesDir, gen.TemplateName)
 
 	gen.Destination = params.Destination
-	gen.AnswersFile = path.Join(gen.Destination, ".cgen.yaml")
-	gen.QuestionsFile = path.Join(gen.Source, "config.yaml")
-	gen.TemplateFiles = path.Join(gen.Source, "template")
+	gen.AnswersFile = filepath.Clean(path.Join(gen.Destination, ".cgen.yaml"))
+	gen.QuestionsFile = filepath.Clean(path.Join(gen.Source, "config.yaml"))
+	gen.TemplateFiles = filepath.Clean(path.Join(gen.Source, "template"))
 	gen.Config = &Config{}
 
 	gen.TemplateHelpers = template.FuncMap{
@@ -206,15 +206,21 @@ func (gen *Generator) walkFiles(inPath string, file os.FileInfo, err error) erro
 		return nil
 	}
 
+	gen.log("debug", fmt.Sprintf("inPath %s", inPath), gen.Options.Verbose)
+	gen.log("debug", fmt.Sprintf("TemplateFiles %s", gen.TemplateFiles), gen.Options.Verbose)
+	gen.log("debug", fmt.Sprintf("Destination %s", gen.Destination), gen.Options.Verbose)
+
 	outPath := strings.Replace(inPath, gen.TemplateFiles, gen.Destination, 1)
+
+	gen.log("debug", fmt.Sprintf("outPath %s", outPath), gen.Options.Verbose)
+
 	if err := os.MkdirAll(filepath.Dir(outPath), 0700); err != nil {
 		return err
 	}
 
 	if isTemplate {
 		outPath = strings.Replace(outPath, filepath.Ext(outPath), "", 1)
-		fmt.Printf("Processing Template File %s\n", inPath)
-		// fmt.Printf("Generating Template: %s\n", inPath)
+		gen.log("info", fmt.Sprintf("Processing Template File %s", outPath), true)
 
 		templateFile, err := template.New(file.Name()).Funcs(gen.TemplateHelpers).ParseFiles(inPath)
 		if err != nil {
@@ -226,13 +232,13 @@ func (gen *Generator) walkFiles(inPath string, file os.FileInfo, err error) erro
 			return err
 		}
 
-		fmt.Printf("Writing To: %s: \n", outPath)
+		gen.log("info", fmt.Sprintf("Writing To: %s", outPath), true)
 		if err := templateFile.Execute(generated, gen.Answers); err != nil {
 			return err
 		}
 	} else {
 		gen.copy(inPath, outPath)
-		fmt.Printf("Copying File: %s\n", outPath)
+		gen.log("info", fmt.Sprintf("Copying File To: %s", outPath), true)
 	}
 
 	return nil // no errors
@@ -360,4 +366,10 @@ func (gen *Generator) runAfter() (err error) {
 		}
 	}
 	return err
+}
+
+func (gen *Generator) log(lvl, ln string, verbose bool) {
+	if verbose {
+		fmt.Println(fmt.Sprintf("[%s]\t %s", lvl, ln))
+	}
 }

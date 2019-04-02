@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/blang/semver"
@@ -29,8 +30,8 @@ func (app *CGen) init() (err error) {
 		return err
 	}
 
-	app.BaseDir = path.Join(usr.HomeDir, ".cgen")
-	app.TemplatesDir = path.Join(app.BaseDir, "generators")
+	app.BaseDir = filepath.Clean(path.Join(usr.HomeDir, ".cgen"))
+	app.TemplatesDir = filepath.Clean(path.Join(app.BaseDir, "generators"))
 	app.Generator = Generator{}
 
 	if _, err := os.Stat(app.BaseDir); os.IsNotExist(err) {
