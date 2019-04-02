@@ -59,15 +59,16 @@ type Generator struct {
 	}
 }
 
-func (gen *Generator) init(name, cgenTemplate, src string, upgrade, staticOnly bool) error {
+func (gen *Generator) init(params GeneratorParams) error {
+	params.toJSON()
 	// set options
-	gen.Options.StaticOnly = staticOnly
-	gen.Options.PerformUpgrade = upgrade
+	gen.Options.StaticOnly = params.StaticOnly
+	gen.Options.PerformUpgrade = params.PerformUpgrade
 
 	// todo: validate inputs, that files exist etc
 	// default destination to current working directory or use project name
 	// check to see if an answers file exists in current dir
-	answerFile := path.Join(".", ".cgen.yaml")
+	answerFile := path.Join(params.Destination, ".cgen.yaml")
 	if gen.Options.PerformUpgrade {
 		// ensure answer file exists
 		if _, err := os.Stat(answerFile); err != nil {
@@ -86,15 +87,15 @@ func (gen *Generator) init(name, cgenTemplate, src string, upgrade, staticOnly b
 		gen.Answers = update.Answers
 		gen.TemplateName = update.Template
 	} else {
-		gen.TemplateName = cgenTemplate
+		gen.TemplateName = params.Tempate
 	}
 
 	// path to generators
-	gen.Name = name
-	gen.TemplatesDir = src
+	gen.Name = params.Name
+	gen.TemplatesDir = params.TemplatesDir
 	gen.Source = path.Join(gen.TemplatesDir, gen.TemplateName)
 
-	gen.Destination = "."
+	gen.Destination = params.Destination
 	gen.AnswersFile = path.Join(gen.Destination, ".cgen.yaml")
 	gen.QuestionsFile = path.Join(gen.Source, "config.yaml")
 	gen.TemplateFiles = path.Join(gen.Source, "template")
@@ -161,11 +162,6 @@ func (gen *Generator) exec() error {
 	return err
 }
 
-func (gen *Generator) print() error {
-	fmt.Printf("%+v\n", gen)
-	return nil
-}
-
 func (gen *Generator) copy(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
@@ -213,7 +209,7 @@ func (gen *Generator) walkFiles(inPath string, file os.FileInfo, err error) erro
 	if isTemplate {
 		outPath = strings.Replace(outPath, filepath.Ext(outPath), "", 1)
 		fmt.Printf("Processing Template File %s\n", inPath)
-		fmt.Printf("Generating Template: %s\n", inPath)
+		// fmt.Printf("Generating Template: %s\n", inPath)
 
 		templateFile, err := template.New(file.Name()).Funcs(gen.TemplateHelpers).ParseFiles(inPath)
 		if err != nil {
@@ -225,6 +221,7 @@ func (gen *Generator) walkFiles(inPath string, file os.FileInfo, err error) erro
 			return err
 		}
 
+		fmt.Printf("Writing To: %s: \n", outPath)
 		if err := templateFile.Execute(generated, gen.Answers); err != nil {
 			return err
 		}

@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"path/filepath"
 )
 
 // todo: write tests
@@ -70,14 +69,14 @@ func main() {
 
 	// Main Package
 	// resolve current directory.
-	pwd, _ := filepath.Abs(".")
+	pwd, _ := os.Getwd()
 	thisDir, err := os.Stat(pwd)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// check to see if directory is dirty.
-	if files, err := ioutil.ReadDir("./"); err != nil {
+	if files, err := ioutil.ReadDir(pwd); err != nil {
 		log.Fatal(err)
 	} else {
 		if len(files) != 0 {
@@ -129,12 +128,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := app.Generator.init(*name, *project, app.TemplatesDir, *doUpgrade, *staticOnly); err != nil {
-		log.Fatal(err)
+	params := GeneratorParams{
+		Name:           *name,            // name of this project
+		TemplatesDir:   app.TemplatesDir, // directory of all cgen templates
+		Tempate:        *project,         // selected cgen template
+		Destination:    pwd,              // destination directory for generated files
+		PerformUpgrade: *doUpgrade,       // perform upgrade
+		StaticOnly:     *staticOnly,      // only copy static files, no template interpolation
 	}
 
-	// print configuration
-	if err := app.Generator.print(); err != nil {
+	if err := app.Generator.init(params); err != nil {
 		log.Fatal(err)
 	}
 
