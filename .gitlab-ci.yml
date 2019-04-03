@@ -40,7 +40,7 @@ test:
   script:
     - export PROJECT_PATH=$GOPATH/src/github.com/techdecaf/cgen
     - apk add make curl git
-    - mkdir -p $PROJECT_PATH && cd $$PROJECT_PATH
+    - mkdir -p $PROJECT_PATH && cd $PROJECT_PATH
     - cp -r $CI_PROJECT_DIR/* .
     - pwd
     - ls -la
