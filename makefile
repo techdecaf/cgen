@@ -1,42 +1,41 @@
 HELP_SPACING=15
-PACKAGE_NAME=cgen
-PACKAGE_VERSION := $(shell git describe --tags --always --dirty --abbrev=0)
+
+CI_PROJECT_NAME ?= cgen
+CI_COMMIT_TAG ?= $(shell git describe --tags --always --dirty --abbrev=0)
+CI_COMMIT_REF_NAME ?= $(shell git rev-parse --abbrev-ref HEAD)  # curernt branch
+CI_COMMIT_SHA ?= $(shell git rev-parse HEAD)
+
 S3_BUCKET := github.techdecaf.io
-# This version-strategy uses git tags to set the version string
-#
-# This version-strategy uses a manual value to set the version string
-#VERSION := 1.2.3
 
 install: ## Install all the build and lint dependencies
 	# go get -u github.com/alecthomas/gometalinter
 	go get -u golang.org/x/tools/cmd/cover
 	go get -u github.com/golang/dep/cmd/dep
 	# gometalinter --install --update
-	@$(MAKE) dep
+	dep ensure
 
 build: clean ## complie window, linux, osx x64
 	# @export GOARCH=amd64
-	GOOS=windows go build -ldflags "-X main.VERSION=$(PACKAGE_VERSION)" -o .dist/windows/$(PACKAGE_NAME).exe -v
-	GOOS=darwin go build -ldflags "-X main.VERSION=$(PACKAGE_VERSION)" -o .dist/osx/$(PACKAGE_NAME) -v
+	GOOS=windows go build -ldflags "-X main.VERSION=$(CI_COMMIT_TAG)" -o .dist/windows/$(CI_PROJECT_NAME).exe -v
+	GOOS=darwin go build -ldflags "-X main.VERSION=$(CI_COMMIT_TAG)" -o .dist/osx/$(CI_PROJECT_NAME) -v
+	GOOS=linux go build -ldflags "-X main.VERSION=$(CI_COMMIT_TAG)" -o .dist/linux/$(CI_PROJECT_NAME) -v
 
 test: ## Run all the tests
-	echo 'mode: atomic' > coverage.txt && go test -covermode=atomic -coverprofile=coverage.txt -v -race -timeout=30s ./...
+	@echo no tests yet, you should add some.
 
 cover: test ## Run all the tests and opens the coverage report
 	go tool cover -html=coverage.txt
-
-dep: ## Run dep ensure and prune
-	dep ensure
 
 clean: ## Remove temporary files
 	go clean
 	rm -rf .dist
 
 version: ## prints the current version tag
-	@echo $(PACKAGE_VERSION)
+	@echo $(CI_COMMIT_TAG)
 
 publish: ## push build to s3
-	@aws s3 sync .dist s3://$(S3_BUCKET)/$(PACKAGE_NAME)/$(PACKAGE_VERSION)
+	@aws s3 sync .dist s3://$(S3_BUCKET)/$(CI_PROJECT_NAME)/$(CI_COMMIT_TAG)
+	@aws s3 sync .dist s3://$(S3_BUCKET)/$(CI_PROJECT_NAME)/latest
 
 # Absolutely awesome: http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help: ## Print help text

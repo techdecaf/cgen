@@ -6,23 +6,20 @@
 image: golang:1.11-alpine
 # image: node:8.11-alpine
 
-# variables:
-#   DECAF_VAR: "value"
+variables:
+  PROJECT_PATH: "/go/src/github.com/techdecaf/cgen"
 
 # This folder is cached between builds
 # http://docs.gitlab.com/ce/ci/yaml/README.html#cache
 cache:
   paths:
     - /apt-cache
-    - /go/src/github.com
-    - /go/src/golang.org
-    - /go/src/google.golang.org
-    - /go/src/gopkg.in
+    - /go/src
 
 # run in order.
 stages:
   - test
-  - build
+  - deploy
 
 # Pick zero or more services to be used on all builds.
 # Only needed when using a docker container to run your tests in.
@@ -34,20 +31,24 @@ services:
 #  - mongo:3.4
 
 # runs before each job
-before_script:
-  - apk add make curl
+# before_script:
+# - apk add make curl git
 
 test:
+  image: golang:1.11-alpine
   stage: test
   script:
-    - make clean install test
+    - apk add make curl git
+    - mkdir -p $PROJECT_PATH && cd $_
+    - cp -r $CI_PROJECT_DIR/* .
+    - make clean install test build
   # coverage: /All files\s*\|\s*([\d\.]+)/
 
 deploy:
   image: mesosphere/aws-cli:1.14.5
-  stage: build
+  stage: deploy
   script:
     - eval $(curl -s "$DECAF_URL/keys/aws/set/env/linux/website-update?jwt=$DECAF_TOKEN")
-    - make build publish
+    - make publish
   only:
     - master
