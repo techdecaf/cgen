@@ -156,7 +156,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:da76817708f332e4a6a161581de588bbd420d020e976759408b3321f39f1a48d"
+  digest = "1:a45ec3bb7c73e52430410dff3e0a5534ce518f72a8eb4355bc8502c546b91ecc"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -165,7 +165,7 @@
     "go/types/typeutil",
   ]
   pruneopts = "UT"
-  revision = "59cd96f77e7ec4d6e1fc7489f61915a82879680d"
+  revision = "202502a5a9245830b5ec7b877e26b67760da8e67"
 
 [[projects]]
   branch = "v3-unstable"
