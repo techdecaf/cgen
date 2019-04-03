@@ -6,8 +6,8 @@
 image: golang:1.11-alpine
 # image: node:8.11-alpine
 
-variables:
-  PROJECT_PATH: "/go/src/github.com/techdecaf/cgen"
+# variables:
+#   PROJECT_PATH: "$GOPATH/src/github.com/techdecaf/cgen"
 
 # This folder is cached between builds
 # http://docs.gitlab.com/ce/ci/yaml/README.html#cache
@@ -37,8 +37,13 @@ services:
 test:
   image: golang:1.11-alpine
   stage: test
+  variables:
+    PROJECT_PATH: "$GOPATH/src/github.com/techdecaf/cgen"
   script:
     - apk add make curl git
+    - echo $GOPATH
+    - echo $PROJECT_PATH
+    - export | grep CI_
     - mkdir -p $PROJECT_PATH && cd $_
     - cp -r $CI_PROJECT_DIR/* .
     - make clean install test build
