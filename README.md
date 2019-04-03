@@ -1,4 +1,3 @@
-
 <p align="center">
   <img alt="cgen" src="https://images.techdecaf.com/fit-in/100x/techdecaf/cgen_logo.png" width="100" />
 </p>
@@ -9,6 +8,7 @@ This project is designed to be a cross platform plugin-based project generator.
 Simply run `cgen` to get started!
 
 - [cgen project generator](#cgen-project-generator)
+  - [Download and Install cgen](#download-and-install-cgen)
   - [Installing a template](#installing-a-template)
   - [Creating Your own Template Plugin](#creating-your-own-template-plugin)
   - [Template Operators Operators](#template-operators-operators)
@@ -36,6 +36,17 @@ Usage of cgen:
   -version
     # prints cgen version number
 ```
+
+## Download and Install cgen
+
+Download Links
+
+- [windows](https://s3-us-west-2.amazonaws.com/github.techdecaf.io/cgen/latest/windows/cgen.exe)
+- [mac](https://s3-us-west-2.amazonaws.com/github.techdecaf.io/cgen/latest/osx/cgen)
+- [linux](https://s3-us-west-2.amazonaws.com/github.techdecaf.io/cgen/latest/linux/cgen)
+
+To install cgen, simlink or place it in any directory that is part of your path.
+i.e. `/usr/local/bin` or `c:\windows`
 
 ## Installing a template
 
@@ -90,7 +101,7 @@ We use the go template engine to create your project, you can find detailed docu
 
 ### Full project generation
 
-cgen creates an answer file in the root of your project, if you wish to upgrade your project with a newer version of your installed template just `cd <project_dir>` and `cgn  -upgrade`.
+cgen creates an answer file in the root of your project, if you wish to upgrade your project with a newer version of your installed template just `cd <project_dir>` and `cgn -upgrade`.
 
 ### Updating static files only
 
@@ -105,6 +116,6 @@ cgen -upgrade -staticOnly
 
 Wait, what? Why does a generator do this?
 
-we added a bump feature to cgen to help with your projects life cycle, frequently we end up using many different tools to change the version of a project depending on the language we are using.  However we felt that git was the correct place to bump and release new versions of our code.  So you can also use cgen to handle this for you.
+we added a bump feature to cgen to help with your projects life cycle, frequently we end up using many different tools to change the version of a project depending on the language we are using. However we felt that git was the correct place to bump and release new versions of our code. So you can also use cgen to handle this for you.
 
 To use run `cgen -bump <major | minor | patch | pre-release string>` and cgen will update your git tags with a new semver.
