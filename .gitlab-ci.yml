@@ -37,9 +37,8 @@ services:
 test:
   image: golang:1.11-alpine
   stage: test
-  variables:
-    PROJECT_PATH: "$GOPATH/src/github.com/techdecaf/cgen"
   script:
+    - export PROJECT_PATH=$GOPATH/src/github.com/techdecaf/cgen
     - apk add make curl git
     - echo $GOPATH
     - echo $PROJECT_PATH
