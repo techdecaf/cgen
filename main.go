@@ -10,7 +10,8 @@ import (
 )
 
 // todo: write tests
-// version - This is converted to the git tag at compile time using the make build command.
+
+// VERSION - This is converted to the git tag at compile time using the make build command.
 var VERSION string
 
 func main() {

@@ -18,6 +18,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+// Output struct
 type Output struct {
 	Template string                 `yaml:"template"`
 	Answers  map[string]interface{} `yaml:"answers"`
