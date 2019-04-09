@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,6 +11,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/manifoldco/promptui"
