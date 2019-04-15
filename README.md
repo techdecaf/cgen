@@ -9,6 +9,7 @@ Simply run `cgen` to get started!
 
 - [cgen project generator](#cgen-project-generator)
   - [Download and Install cgen](#download-and-install-cgen)
+    - [upgrading using curl](#upgrading-using-curl)
   - [Installing a template](#installing-a-template)
   - [Creating Your own Template Plugin](#creating-your-own-template-plugin)
   - [Template Operators Operators](#template-operators-operators)
@@ -47,6 +48,16 @@ Download Links
 
 To install cgen, simlink or place it in any directory that is part of your path.
 i.e. `/usr/local/bin` or `c:\windows`
+
+### upgrading using curl
+
+```bash
+# for linux simply replace `osx` with `linux`
+# this will download cgen, make it executable and replace your existing binary with the upgraded version.
+curl -o cgen https://s3-us-west-2.amazonaws.com/github.techdecaf.io/cgen/latest/osx/cgen  && chmod +x cgen && mv cgen $(which cgen)
+```
+
+> NOTE: you can also replace `latest` with any valid cgen version.
 
 ## Installing a template
 
