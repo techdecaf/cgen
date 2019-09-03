@@ -42,7 +42,7 @@ vendor
 .node_repl_history
 
 # build files
-.dist
+dist
 build
 build/Release
 
