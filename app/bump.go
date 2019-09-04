@@ -58,8 +58,6 @@ func Bump(params BumpParams) (version string, err error) {
 	msg := fmt.Sprintf("cgen bump -l %s", place)
 	cmd := fmt.Sprintf("git tag -a %s -m '%s'", tag, msg)
 
-	fmt.Println(cmd)
-
 	if params.DryRun {
 		return tag, err
 	}
