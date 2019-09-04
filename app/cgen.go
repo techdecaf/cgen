@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"bufio"
@@ -13,7 +13,13 @@ import (
 	"strings"
 
 	"github.com/blang/semver"
+	"github.com/techdecaf/golog"
 )
+
+// Log cgen logger
+var Log = golog.Log{
+	Name: "cgen",
+}
 
 // CGen application
 type CGen struct {
@@ -22,7 +28,8 @@ type CGen struct {
 	Generator    Generator
 }
 
-func (app *CGen) init() (err error) {
+// Init new instance of CGEN
+func (app *CGen) Init() (err error) {
 	var mode os.FileMode = 0700
 
 	usr, err := user.Current()
@@ -45,7 +52,8 @@ func (app *CGen) init() (err error) {
 	return nil
 }
 
-func (app *CGen) install(url string) (err error) {
+// Install a generator from git.
+func (app *CGen) Install(url string) (err error) {
 	// what to name the generator dir.
 	as := strings.TrimSuffix(path.Base(url), path.Ext(url))
 	dir := path.Join(app.TemplatesDir, as)
@@ -53,11 +61,13 @@ func (app *CGen) install(url string) (err error) {
 	return execute("git", "clone", url, dir)
 }
 
-func (app *CGen) update(name string) (err error) {
+// Update a project
+func (app *CGen) Update(name string) (err error) {
 	return errors.New("this endpoint has not yet been created, want to contribute?")
 }
 
-func (app *CGen) listInstalled() (installed []string, err error) {
+// ListInstalled generators from ~/.cgen/generators
+func (app *CGen) ListInstalled() (installed []string, err error) {
 	files, err := ioutil.ReadDir(app.TemplatesDir)
 	if err != nil {
 		return nil, err
@@ -74,7 +84,8 @@ func (app *CGen) listInstalled() (installed []string, err error) {
 	return installed, err
 }
 
-func (app *CGen) bump(place string) (version string, gitErr error) {
+// Bump bump project versions
+func (app *CGen) Bump(place string) (version string, gitErr error) {
 	place = strings.ToLower(strings.TrimSpace(place))
 
 	out, gitErr := exec.Command("git", "describe", "--tags", "--always", "--dirty", "--abbrev=0").Output()

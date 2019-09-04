@@ -14,15 +14,16 @@ require (
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 	github.com/lunixbochs/vtclean v0.0.0-20180621232353-2d01aacdc34a
 	github.com/manifoldco/promptui v0.3.2
-	github.com/mattn/go-colorable v0.0.9
-	github.com/mattn/go-isatty v0.0.4
+	github.com/mattn/go-colorable v0.1.2
+	github.com/mattn/go-isatty v0.0.9
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nicksnyder/go-i18n v1.10.0
 	github.com/pelletier/go-toml v1.2.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.4.0
+	github.com/techdecaf/golog v0.0.0-20190903162748-737582b5d4b8
 	github.com/tsenart/deadcode v0.0.0-20160724212837-210d2dc333e9
-	golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a
+	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a
 	golang.org/x/tools v0.0.0-20190402200628-202502a5a924
 	gopkg.in/alecthomas/kingpin.v3-unstable v3.0.0-20171010053543-63abe20a23e2
 	gopkg.in/yaml.v2 v2.2.2

@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"bytes"
@@ -61,7 +61,8 @@ type Generator struct {
 	}
 }
 
-func (gen *Generator) init(params GeneratorParams) error {
+// Init a new instance of Generator
+func (gen *Generator) Init(params GeneratorParams) error {
 	// set options
 	gen.Options.StaticOnly = params.StaticOnly
 	gen.Options.PerformUpgrade = params.PerformUpgrade
@@ -139,36 +140,38 @@ func (gen *Generator) init(params GeneratorParams) error {
 	byteValue, _ := ioutil.ReadAll(configYAML)
 	yaml.Unmarshal(byteValue, &gen.Config)
 
-	gen.appendAnswer("TemplateVersion", gen.Config.Version)
-	gen.appendAnswer("Timestamp", time.Now().UTC().Format(time.RFC3339))
+	gen.AppendAnswer("TemplateVersion", gen.Config.Version)
+	gen.AppendAnswer("Timestamp", time.Now().UTC().Format(time.RFC3339))
 	return nil
 }
 
-func (gen *Generator) exec() error {
-	if err := gen.prompt(); err != nil {
+// Exec run the generator
+func (gen *Generator) Exec() error {
+	if err := gen.Prompt(); err != nil {
 		return err
 	}
 
-	if err := filepath.Walk(gen.TemplateFiles, gen.walkFiles); err != nil {
+	if err := filepath.Walk(gen.TemplateFiles, gen.WalkFiles); err != nil {
 		return err
 	}
 
 	// save output to projct_root/.cgen.yaml
-	ans, err := gen.save()
+	ans, err := gen.Save()
 	if err := ioutil.WriteFile(gen.Destination+"/.cgen.yaml", ans, 0644); err != nil {
 		return err
 	}
 
 	if !gen.Options.PerformUpgrade {
 		// run scripts in config.run_after array.
-		if err := gen.runAfter(); err != nil {
+		if err := gen.RunAfter(); err != nil {
 			return err
 		}
 	}
 	return err
 }
 
-func (gen *Generator) copy(src, dst string) error {
+// Copy from src to dest
+func (gen *Generator) Copy(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
 		return err
@@ -193,7 +196,8 @@ func (gen *Generator) copy(src, dst string) error {
 	return out.Close()
 }
 
-func (gen *Generator) walkFiles(inPath string, file os.FileInfo, err error) error {
+// WalkFiles files as part of the generator
+func (gen *Generator) WalkFiles(inPath string, file os.FileInfo, err error) error {
 	// identify template files
 	isTemplate := filepath.Ext(inPath) == ".tmpl"
 
@@ -207,13 +211,13 @@ func (gen *Generator) walkFiles(inPath string, file os.FileInfo, err error) erro
 		return nil
 	}
 
-	gen.log("debug", fmt.Sprintf("inPath %s", inPath), gen.Options.Verbose)
-	gen.log("debug", fmt.Sprintf("TemplateFiles %s", gen.TemplateFiles), gen.Options.Verbose)
-	gen.log("debug", fmt.Sprintf("Destination %s", gen.Destination), gen.Options.Verbose)
+	gen.Log("debug", fmt.Sprintf("inPath %s", inPath), gen.Options.Verbose)
+	gen.Log("debug", fmt.Sprintf("TemplateFiles %s", gen.TemplateFiles), gen.Options.Verbose)
+	gen.Log("debug", fmt.Sprintf("Destination %s", gen.Destination), gen.Options.Verbose)
 
 	outPath := strings.Replace(inPath, gen.TemplateFiles, gen.Destination, 1)
 
-	gen.log("debug", fmt.Sprintf("outPath %s", outPath), gen.Options.Verbose)
+	gen.Log("debug", fmt.Sprintf("outPath %s", outPath), gen.Options.Verbose)
 
 	if err := os.MkdirAll(filepath.Dir(outPath), 0700); err != nil {
 		return err
@@ -221,7 +225,7 @@ func (gen *Generator) walkFiles(inPath string, file os.FileInfo, err error) erro
 
 	if isTemplate {
 		outPath = strings.Replace(outPath, filepath.Ext(outPath), "", 1)
-		gen.log("info", fmt.Sprintf("Processing Template File %s", outPath), true)
+		gen.Log("info", fmt.Sprintf("Processing Template File %s", outPath), true)
 
 		templateFile, err := template.New(file.Name()).Funcs(gen.TemplateHelpers).ParseFiles(inPath)
 		if err != nil {
@@ -233,21 +237,22 @@ func (gen *Generator) walkFiles(inPath string, file os.FileInfo, err error) erro
 			return err
 		}
 
-		gen.log("info", fmt.Sprintf("Writing To: %s", outPath), true)
+		gen.Log("info", fmt.Sprintf("Writing To: %s", outPath), true)
 		if err := templateFile.Execute(generated, gen.Answers); err != nil {
 			return err
 		}
 	} else {
-		gen.copy(inPath, outPath)
-		gen.log("info", fmt.Sprintf("Copying File To: %s", outPath), true)
+		gen.Copy(inPath, outPath)
+		gen.Log("info", fmt.Sprintf("Copying File To: %s", outPath), true)
 	}
 
 	return nil // no errors
 }
 
-func (gen *Generator) prompt() error {
+// Prompt user to respond in the console.
+func (gen *Generator) Prompt() error {
 	for _, q := range gen.Config.Questions {
-		res, err := gen.ask(*q)
+		res, err := gen.Ask(*q)
 		fmt.Printf("%s: %q\n", q.Name, res)
 		if err != nil {
 			return err
@@ -257,10 +262,11 @@ func (gen *Generator) prompt() error {
 	return nil
 }
 
-func (gen *Generator) ask(q Question) (answer string, err error) {
+// Ask a question
+func (gen *Generator) Ask(q Question) (answer string, err error) {
 
 	if val := os.Getenv(q.Name); val != "" {
-		return gen.appendAnswer(q.Name, val), nil
+		return gen.AppendAnswer(q.Name, val), nil
 	}
 
 	if val := gen.Answers[q.Name]; val != nil {
@@ -312,10 +318,11 @@ func (gen *Generator) ask(q Question) (answer string, err error) {
 		return "", err
 	}
 
-	return gen.appendAnswer(q.Name, answer), nil
+	return gen.AppendAnswer(q.Name, answer), nil
 }
 
-func (gen *Generator) appendAnswer(name, val string) (answer string) {
+// AppendAnswer to gen.Answers map
+func (gen *Generator) AppendAnswer(name, val string) (answer string) {
 	if gen.Answers == nil {
 		gen.Answers = make(map[string]interface{})
 	}
@@ -332,7 +339,8 @@ func (gen *Generator) appendAnswer(name, val string) (answer string) {
 	return val
 }
 
-func (gen *Generator) save() (out []byte, err error) {
+// Save yaml output
+func (gen *Generator) Save() (out []byte, err error) {
 	output := Output{}
 	output.Answers = gen.Answers
 	output.Template = gen.TemplateName
@@ -342,8 +350,8 @@ func (gen *Generator) save() (out []byte, err error) {
 	return res, err
 }
 
-// run all commands found in config.yaml run_after prop.
-func (gen *Generator) runAfter() (err error) {
+// RunAfter runs all commands found in config.yaml run_after prop.
+func (gen *Generator) RunAfter() (err error) {
 	for _, cmd := range gen.Config.RunAfter {
 		var command bytes.Buffer
 
@@ -369,7 +377,8 @@ func (gen *Generator) runAfter() (err error) {
 	return err
 }
 
-func (gen *Generator) log(lvl, ln string, verbose bool) {
+// Log new messages
+func (gen *Generator) Log(lvl, ln string, verbose bool) {
 	if verbose {
 		fmt.Println(fmt.Sprintf("[%s]\t %s", lvl, ln))
 	}
