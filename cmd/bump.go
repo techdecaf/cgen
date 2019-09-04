@@ -16,7 +16,7 @@ var bumpCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// parse flags
 		var level, pattern string
-		var dryRun bool
+		var dryRun, push bool
 		var err error
 
 		if level, err = cmd.Flags().GetString("level"); err != nil {
@@ -31,6 +31,10 @@ var bumpCmd = &cobra.Command{
 			app.Log.Fatal("cmd_flags", err)
 		}
 
+		if push, err = cmd.Flags().GetBool("push"); err != nil {
+			app.Log.Fatal("cmd_flags", err)
+		}
+
 		// initialize a new instance of cgen
 		cgen := &app.CGen{}
 		if err := cgen.Init(); err != nil {
@@ -41,6 +45,7 @@ var bumpCmd = &cobra.Command{
 			Place:   level,
 			Pattern: pattern,
 			DryRun:  dryRun,
+			GitPush: push,
 		})
 
 		if err != nil {
@@ -65,6 +70,7 @@ func init() {
 	// is called directly, e.g.:
 	// bumpCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	bumpCmd.Flags().StringP("level", "l", "patch", "accepts (major, minor, patch or pre-release); defaults to `patch`")
-	bumpCmd.Flags().StringP("pattern", "p", "v%s", "use a custom pattern for the git tag, defaults to v%s i.e. (v1.0.2)")
+	bumpCmd.Flags().StringP("pattern", "p", "v%s", "use a custom pattern for the git tag, %s will be replaced with the version number, v%s => v1.0.2")
+	bumpCmd.Flags().Bool("push", false, "dry run only, do not run git tag")
 	bumpCmd.Flags().BoolP("dry-run", "d", false, "dry run only, do not run git tag")
 }

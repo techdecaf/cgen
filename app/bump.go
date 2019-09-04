@@ -14,6 +14,7 @@ type BumpParams struct {
 	Place   string
 	Pattern string
 	DryRun  bool
+	GitPush bool
 }
 
 // Bump bump project versions
@@ -66,6 +67,14 @@ func Bump(params BumpParams) (version string, err error) {
 		Cmd:       cmd,
 		UseStdOut: true,
 	})
+
+	// push
+	if params.GitPush {
+		templates.Run(templates.CommandOptions{
+			Cmd:       "git push --tags",
+			UseStdOut: true,
+		})
+	}
 
 	return tag, err
 }
