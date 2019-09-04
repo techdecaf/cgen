@@ -20,7 +20,6 @@ type BumpParams struct {
 // Bump bump project versions
 func Bump(params BumpParams) (version string, err error) {
 	reEx := regexp.MustCompile(`(\d+\.\d+\.\d+)`)
-
 	place := strings.ToLower(strings.TrimSpace(params.Place))
 	pattern := params.Pattern
 
@@ -29,6 +28,10 @@ func Bump(params BumpParams) (version string, err error) {
 		UseStdOut:  false,
 		TrimOutput: false,
 	})
+
+	if err != nil {
+		return out, err
+	}
 
 	version = strings.TrimSpace(string(out))
 
@@ -63,17 +66,25 @@ func Bump(params BumpParams) (version string, err error) {
 		return tag, err
 	}
 
-	templates.Run(templates.CommandOptions{
+	GitTag := templates.CommandOptions{
 		Cmd:       cmd,
 		UseStdOut: true,
-	})
+	}
+
+	if out, err := templates.Run(GitTag); err != nil {
+		return out, err
+	}
 
 	// push
+	GitPush := templates.CommandOptions{
+		Cmd:       "git push --tags",
+		UseStdOut: true,
+	}
+
 	if params.GitPush {
-		templates.Run(templates.CommandOptions{
-			Cmd:       "git push --tags",
-			UseStdOut: true,
-		})
+		if out, err := templates.Run(GitPush); err != nil {
+			return out, err
+		}
 	}
 
 	return tag, err
