@@ -65,6 +65,6 @@ func init() {
 	// is called directly, e.g.:
 	// bumpCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	bumpCmd.Flags().StringP("level", "l", "patch", "accepts (major, minor, patch or pre-release); defaults to `patch`")
-	bumpCmd.Flags().StringP("pattern", "c", "v%s", "use a custom pattern for the git tag, defaults to v%s i.e. (v1.0.2)")
+	bumpCmd.Flags().StringP("pattern", "p", "v%s", "use a custom pattern for the git tag, defaults to v%s i.e. (v1.0.2)")
 	bumpCmd.Flags().BoolP("dry-run", "d", false, "dry run only, do not run git tag")
 }
