@@ -1,19 +1,17 @@
 package app
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"os/user"
 	"path"
 	"path/filepath"
 	"strings"
 
-	"github.com/blang/semver"
 	"github.com/techdecaf/golog"
+	"github.com/techdecaf/templates"
 )
 
 // Log cgen logger
@@ -53,12 +51,16 @@ func (app *CGen) Init() (err error) {
 }
 
 // Install a generator from git.
-func (app *CGen) Install(url string) (err error) {
+func (app *CGen) Install(url string) (out string, err error) {
 	// what to name the generator dir.
 	as := strings.TrimSuffix(path.Base(url), path.Ext(url))
 	dir := path.Join(app.TemplatesDir, as)
 
-	return execute("git", "clone", url, dir)
+	GitClone := templates.CommandOptions{
+		Cmd:       fmt.Sprintf("git clone %s %s", url, dir),
+		UseStdOut: true,
+	}
+	return templates.Run(GitClone)
 }
 
 // Update a project
@@ -78,60 +80,8 @@ func (app *CGen) ListInstalled() (installed []string, err error) {
 	}
 
 	if len(installed) == 0 {
-		return nil, errors.New("no generators are installed, would you like to add some? Try: `cgen -install <url>`")
+		return nil, errors.New("no generators are installed, would you like to add some? Try: `cgen install <url>`")
 	}
 
 	return installed, err
-}
-
-// Bump bump project versions
-func (app *CGen) Bump(place string) (version string, gitErr error) {
-	place = strings.ToLower(strings.TrimSpace(place))
-
-	out, gitErr := exec.Command("git", "describe", "--tags", "--always", "--dirty", "--abbrev=0").Output()
-	if gitErr != nil {
-		return "", gitErr
-	}
-	version = strings.TrimSpace(string(out))
-
-	// check to make sure git repository is not dirty before performing a bump
-	//TODO: catch git with no commit history
-	if strings.Contains(version, "dirty") {
-		return "", fmt.Errorf("uncommitted changes: please stash or commit the current changes before bumping the version")
-	}
-
-	v, _ := semver.Make(version)
-
-	switch place {
-	case "major":
-		v.Major++
-		v.Minor = 0
-		v.Patch = 0
-	case "minor":
-		v.Minor++
-		v.Patch = 0
-	case "patch":
-		v.Patch++
-	default:
-		v.Pre[0], gitErr = semver.NewPRVersion(place)
-	}
-
-	// bump using git tag
-	cmd := exec.Command("git", "tag", "-a", v.String(), "-m", fmt.Sprintf("[bump] cgen -bump %s", place))
-	stderr, _ := cmd.StderrPipe()
-	stdout, _ := cmd.StdoutPipe()
-	cmd.Start()
-
-	scanErr := bufio.NewScanner(stderr)
-	for scanErr.Scan() {
-		fmt.Println(scanErr.Text())
-	}
-
-	scanOut := bufio.NewScanner(stdout)
-	for scanOut.Scan() {
-		fmt.Println(scanOut.Text())
-	}
-
-	cmd.Wait()
-	return v.String(), gitErr
 }

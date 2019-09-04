@@ -19,7 +19,7 @@ var installCmd = &cobra.Command{
 			app.Log.Fatal("cgen_init", err)
 		}
 
-		if err := cgen.Install(args[0]); err != nil {
+		if _, err := cgen.Install(args[0]); err != nil {
 			app.Log.Fatal("cgen_install", err)
 		}
 		os.Exit(0)

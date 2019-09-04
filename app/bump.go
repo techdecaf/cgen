@@ -23,12 +23,13 @@ func Bump(params BumpParams) (version string, err error) {
 	place := strings.ToLower(strings.TrimSpace(params.Place))
 	pattern := params.Pattern
 
-	out, err := templates.Run(templates.CommandOptions{
+	GitDescribeTags := templates.CommandOptions{
 		Cmd:        "git describe --tags --always --dirty --abbrev=0",
 		UseStdOut:  false,
 		TrimOutput: false,
-	})
+	}
 
+	out, err := templates.Run(GitDescribeTags)
 	if err != nil {
 		return out, err
 	}
