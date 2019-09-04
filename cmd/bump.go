@@ -16,12 +16,18 @@ var bumpCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// parse flags
 		var level, pattern string
+		var dryRun bool
 		var err error
 
 		if level, err = cmd.Flags().GetString("level"); err != nil {
 			app.Log.Fatal("cmd_flags", err)
 		}
+
 		if pattern, err = cmd.Flags().GetString("pattern"); err != nil {
+			app.Log.Fatal("cmd_flags", err)
+		}
+
+		if dryRun, err = cmd.Flags().GetBool("dry-run"); err != nil {
 			app.Log.Fatal("cmd_flags", err)
 		}
 
@@ -31,7 +37,12 @@ var bumpCmd = &cobra.Command{
 			app.Log.Fatal("cgen_init", err)
 		}
 
-		ver, err := app.Bump(level, pattern)
+		ver, err := app.Bump(app.BumpParams{
+			Place:   level,
+			Pattern: pattern,
+			DryRun:  dryRun,
+		})
+
 		if err != nil {
 			app.Log.Fatal("app_bump", err)
 		}
@@ -53,6 +64,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// bumpCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	bumpCmd.Flags().StringP("level", "l", "patch", "accepts (major, minor, patch or pre-release) strings")
-	bumpCmd.Flags().StringP("pattern", "c", "v%n", "use a custom pattern for the git tag, defaults to v%s i.e. (v1.0.2)")
+	bumpCmd.Flags().StringP("level", "l", "patch", "accepts (major, minor, patch or pre-release); defaults to `patch`")
+	bumpCmd.Flags().StringP("pattern", "c", "v%s", "use a custom pattern for the git tag, defaults to v%s i.e. (v1.0.2)")
+	bumpCmd.Flags().BoolP("dry-run", "d", false, "dry run only, do not run git tag")
 }

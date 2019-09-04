@@ -2,20 +2,33 @@ package app
 
 import (
 	"fmt"
-	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/blang/semver"
+	"github.com/techdecaf/templates"
 )
 
-// Bump bump project versions
-func Bump(place, pattern string) (version string, err error) {
-	place = strings.ToLower(strings.TrimSpace(place))
+// BumpParams options for running bump
+type BumpParams struct {
+	Place   string
+	Pattern string
+	DryRun  bool
+}
 
-	out, err := exec.Command("git", "describe", "--tags", "--always", "--dirty", "--abbrev=0").Output()
-	if err != nil {
-		return "", err
-	}
+// Bump bump project versions
+func Bump(params BumpParams) (version string, err error) {
+	reEx := regexp.MustCompile(`(\d+\.\d+\.\d+)`)
+
+	place := strings.ToLower(strings.TrimSpace(params.Place))
+	pattern := params.Pattern
+
+	out, err := templates.Run(templates.CommandOptions{
+		Cmd:        "git describe --tags --always --dirty --abbrev=0",
+		UseStdOut:  false,
+		TrimOutput: false,
+	})
+
 	version = strings.TrimSpace(string(out))
 
 	// check to make sure git repository is not dirty before performing a bump
@@ -24,7 +37,7 @@ func Bump(place, pattern string) (version string, err error) {
 		return "", fmt.Errorf("uncommitted changes: please stash or commit the current changes before bumping the version")
 	}
 
-	v, _ := semver.Make(version)
+	v, _ := semver.Make(reEx.FindString(version))
 
 	switch place {
 	case "major":
@@ -41,24 +54,20 @@ func Bump(place, pattern string) (version string, err error) {
 	}
 
 	// format tag according to the pattern
-	tag := fmt.Sprintf(pattern, v)
+	tag := fmt.Sprintf(pattern, v.String())
+	msg := fmt.Sprintf("cgen bump -l %s", place)
+	cmd := fmt.Sprintf("git tag -a %s -m '%s'", tag, msg)
 
-	// bump using git tag
-	// cmd := exec.Command("git", "tag", "-a", tag, "-m", fmt.Sprintf("cgen bump %s", place))
-	// stderr, _ := cmd.StderrPipe()
-	// stdout, _ := cmd.StdoutPipe()
-	// cmd.Start()
+	fmt.Println(cmd)
 
-	// scanErr := bufio.NewScanner(stderr)
-	// for scanErr.Scan() {
-	// 	fmt.Println(scanErr.Text())
-	// }
+	if params.DryRun {
+		return tag, err
+	}
 
-	// scanOut := bufio.NewScanner(stdout)
-	// for scanOut.Scan() {
-	// 	fmt.Println(scanOut.Text())
-	// }
+	templates.Run(templates.CommandOptions{
+		Cmd:       cmd,
+		UseStdOut: true,
+	})
 
-	// cmd.Wait()
 	return tag, err
 }

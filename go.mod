@@ -22,6 +22,7 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.4.0
 	github.com/techdecaf/golog v0.0.0-20190903162748-737582b5d4b8
+	github.com/techdecaf/templates v0.0.4
 	github.com/tsenart/deadcode v0.0.0-20160724212837-210d2dc333e9
 	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a
 	golang.org/x/tools v0.0.0-20190402200628-202502a5a924
