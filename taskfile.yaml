@@ -26,6 +26,7 @@ tasks:
       - GOOS=darwin go {{.flags}} -o dist/darwin/{{.CI_PROJECT_NAME}} -v
       - GOOS=linux go {{.flags}} -o dist/linux/{{.CI_PROJECT_NAME}} -v
       - GOOS=windows go {{.flags}} -o dist/windows/{{.CI_PROJECT_NAME}}.exe -v
+      - cp install.sh dist/
 
   clean:
     description: removes all files listed in .gitignore
@@ -42,7 +43,6 @@ tasks:
     commands:
       - "aws s3 sync dist s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/{{.CI_COMMIT_TAG}}"
       - "aws s3 sync dist s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/latest"
-      - "aws s3 cp install.sh s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/install.sh"
 
   fails:
     commands: [does_not_exist]
