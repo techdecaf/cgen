@@ -43,11 +43,12 @@ var completionCmd = &cobra.Command{
 
 		fmt.Printf("a zsh completion file has been generated in %s \n", plugin.path)
 		fmt.Println()
-		fmt.Printf("to utilize the plugin, please add %s to the plugins section of your .zshrc file \n", plugin.name)
-		fmt.Printf("i.e. `plugins( %s )`\n", plugin.name)
+		fmt.Printf("to utilize the plugin, please add %s to the plugins section of your \n", plugin.name)
+		fmt.Println(".zshrc file, and add add `compinit` to the bottom .zshrc file")
 		fmt.Println()
-		fmt.Println("additionally, until issue https://github.com/spf13/cobra/issues/881 is merged")
-		fmt.Println("you will want to add `compinit` somewhere in your .zshrc file")
+		fmt.Println(".zshrc")
+		fmt.Printf("065: `plugins( %s )`\n", plugin.name)
+		fmt.Println("EoF: `compinit`")
 	},
 }
 
