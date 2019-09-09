@@ -23,6 +23,6 @@ export APP_BINARY=/tmp/$APP_NAME
 export APPLICATION=$BUCKET_URL/$APP_NAME/$APP_VERSION/$OS/$APP_NAME
 
 echo '[Installed] '$APP_NAME version: $($APP_NAME --version)
-echo '[Downloading]' $APPLICATION #&& curl -o $APP_BINARY $APPLICATION
-echo '[Installing]' $APP_NAME #&& chmod +x $APP_BINARY && mv $APP_BINARY $INSTALL_PATH
+echo '[Downloading]' $APPLICATION && curl -o $APP_BINARY $APPLICATION
+echo '[Installing]' $APP_NAME && chmod +x $APP_BINARY && mv $APP_BINARY $INSTALL_PATH
 echo '[Validation]' $APP_NAME version: $($APP_NAME --version)
