@@ -1,0 +1,7 @@
+{
+  "name": "golang",
+  "dockerFile": "Dockerfile",
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/zsh"
+  }
+}
