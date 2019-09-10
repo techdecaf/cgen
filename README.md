@@ -39,6 +39,10 @@ Usage of cgen:
 
 ## Download and Install cgen
 
+```bash
+sh -c "$(curl -fsSL https://raw.github.com/techdecaf/cgen/master/install.sh)"
+```
+
 Download Links
 
 - [windows](https://s3-us-west-2.amazonaws.com/github.techdecaf.io/cgen/latest/windows/cgen.exe)
