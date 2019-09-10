@@ -35,7 +35,7 @@ tasks:
     description: installs locally to /usr/local/bin
     commands:
       - "chmod +x dist/{{OS}}/{{.CI_PROJECT_NAME}}"
-      - "mv dist/{{OS}}/{{.CI_PROJECT_NAME}} /usr/local/bin"
+      - "cp dist/{{OS}}/{{.CI_PROJECT_NAME}} /usr/local/bin"
 
   publish:
     description: moves compiled files to /usr/local/bin/
