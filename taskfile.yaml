@@ -42,7 +42,8 @@ tasks:
     commands:
       - "aws s3 sync dist s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/{{.CI_COMMIT_TAG}}"
       - "aws s3 sync dist s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/latest"
-      - "aws s3 cp install.sh s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/install.sh"
 
-  fails:
-    commands: [does_not_exist]
+  login:
+    description: checkout temporary aws access keys
+    commands:
+      - curl -s "$DECAF_URL/keys/aws/set/env/linux/website-update?jwt=$DECAF_TOKEN"
