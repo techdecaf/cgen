@@ -17,24 +17,27 @@ Simply run `cgen` to get started!
     - [Updating static files only](#updating-static-files-only)
   - [Bumping a project version](#bumping-a-project-version)
 
-```bash
-Usage of cgen:
-  -bump string
-    # bumps the {major | minor | patch | pre-release string} version of the current directory using git tags.
-  -install string
-    # install a generator using a git clone compatible url cgen -install <url>
-  -list
-    # lists all installed generators
-  -name string
-    # what would you like to name your new project
-  -static-only
-    # does not generate template files (most commonly used with update)
-  -tmpl string
-    # specify a which template you would like to use.
-  -upgrade
-    # attempts to update the current directory, if it's already a cgen project
-  -version
-    # prints cgen version number
+```text
+Usage:
+  cgen [flags]
+  cgen [command]
+
+Available Commands:
+  bump        Creates a new git tag with an increase in the current semversion i.e. v1.0.2
+  help        Help about any command
+  install     Installs a new generator from a git repository
+  list        A brief description of your command
+  upgrade     A brief description of your command
+
+Flags:
+      --config string     config file (default is $HOME/.cgen.yaml)
+  -h, --help              help for cgen
+  -n, --name string       what do you want to call your newly generated project?
+  -s, --static-only       does not generate template files (most commonly used with update)
+  -t, --template string   specify a which template you would like to use.
+  -v, --version           prints the cgen version number
+
+Use "cgen [command] --help" for more information about a command.
 ```
 
 ## Download and Install cgen
@@ -45,11 +48,11 @@ sh -c "$(curl -fsSL https://raw.github.com/techdecaf/cgen/master/install.sh)"
 
 Download Links
 
-- [windows](https://s3-us-west-2.amazonaws.com/github.techdecaf.io/cgen/latest/windows/cgen.exe)
-- [mac](https://s3-us-west-2.amazonaws.com/github.techdecaf.io/cgen/latest/osx/cgen)
-- [linux](https://s3-us-west-2.amazonaws.com/github.techdecaf.io/cgen/latest/linux/cgen)
+- [windows](http://github.techdecaf.io/cgen/latest/windows/cgen.exe)
+- [mac](http://github.techdecaf.io/cgen/latest/darwin/cgen)
+- [linux](http://github.techdecaf.io/cgen/latest/linux/cgen)
 
-To install cgen, simlink or place it in any directory that is part of your path.
+To install cgen, use the provided script, simlink it or place it in any directory that is part of your path.
 i.e. `/usr/local/bin` or `c:\windows`
 
 ## Installing a template
@@ -66,13 +69,13 @@ You can actually use `cgen` to create a `cgen` template :tada:
 
 ```bash
 # install the cgen template generator for templates
-cgen -install https://github.com/techdecaf/cgen-template
+cgen install https://github.com/techdecaf/cgen-template
 
 # create a new directory for your template
 mkdir my-new-template
 
 # execute cgen, follow the prompts
-cgen -tmpl cgen-template
+cgen -t cgen-template
 ```
 
 You can take a look at the [cgen-template](https://github.com/techdecaf/cgen-template) project for more information on use and details for how to create your own templates.
@@ -105,7 +108,8 @@ We use the go template engine to create your project, you can find detailed docu
 
 ### Full project generation
 
-cgen creates an answer file in the root of your project, if you wish to upgrade your project with a newer version of your installed template just `cd <project_dir>` and `cgn -upgrade`.
+cgen creates an answer file in the root of your project, if you wish to upgrade your project with
+a newer version of your installed template just `cd <project_dir>` and `cgn upgrade`.
 
 ### Updating static files only
 
@@ -122,4 +126,4 @@ Wait, what? Why does a generator do this?
 
 we added a bump feature to cgen to help with your projects life cycle, frequently we end up using many different tools to change the version of a project depending on the language we are using. However we felt that git was the correct place to bump and release new versions of our code. So you can also use cgen to handle this for you.
 
-To use run `cgen -bump <major | minor | patch | pre-release string>` and cgen will update your git tags with a new semver.
+To use run `cgen bump --level <major | minor | patch | pre-release string>` and cgen will update your git tags with a new semver.
