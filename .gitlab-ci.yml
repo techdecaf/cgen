@@ -21,7 +21,7 @@ test:
   script:
     - apk add git
     - go run . -h
-    - go run . list
+    - go run . install https://github.com/techdecaf/cgen-template
 
 deploy:
   image: techdecaf/ci:1.3.0
