@@ -16,6 +16,7 @@ Simply run `cgen` to get started!
     - [Full project generation](#full-project-generation)
     - [Updating static files only](#updating-static-files-only)
   - [Bumping a project version](#bumping-a-project-version)
+- [Credits](#credits)
 
 ```text
 Usage:
@@ -127,3 +128,9 @@ Wait, what? Why does a generator do this?
 we added a bump feature to cgen to help with your projects life cycle, frequently we end up using many different tools to change the version of a project depending on the language we are using. However we felt that git was the correct place to bump and release new versions of our code. So you can also use cgen to handle this for you.
 
 To use run `cgen bump --level <major | minor | patch | pre-release string>` and cgen will update your git tags with a new semver.
+
+# Credits
+
+[![TechDecaf](https://images.techdecaf.com/fit-in/150x/techdecaf/logo_full.png)](https://techdecaf.com)
+
+Get back to doing what you do best, let us handle the rest.
