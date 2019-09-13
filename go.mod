@@ -25,7 +25,8 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.4.0
 	github.com/techdecaf/golog v0.0.0-20190903162748-737582b5d4b8
-	github.com/techdecaf/templates v0.0.4
+	github.com/techdecaf/templates v0.2.3
+	github.com/techdecaf/utils v0.0.3
 	github.com/tsenart/deadcode v0.0.0-20160724212837-210d2dc333e9
 	golang.org/x/sys v0.0.0-20190904154756-749cb33beabd
 	golang.org/x/text v0.3.2 // indirect

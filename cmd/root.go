@@ -3,11 +3,11 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/techdecaf/cgen/app"
+	"github.com/techdecaf/utils"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -30,7 +30,7 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		var name, template string
+		var name, template, dest string
 		var version, static bool
 		var err error
 
@@ -44,6 +44,12 @@ var rootCmd = &cobra.Command{
 			app.Log.Fatal("cmd_flags", err)
 		}
 
+		if dest, err = cmd.Flags().GetString("out"); err != nil {
+			app.Log.Fatal("cmd_flags", err)
+		}
+		// resolve the path
+		dest = utils.PathTo(dest)
+
 		if template, err = cmd.Flags().GetString("template"); err != nil {
 			app.Log.Fatal("cmd_flags", err)
 		}
@@ -52,7 +58,7 @@ var rootCmd = &cobra.Command{
 			app.Log.Fatal("cmd_flags", err)
 		}
 
-		app.Log.Info("debugging", fmt.Sprintf("project: %s, template: %s, static: %v", name, template, static))
+		app.Log.Info("debugging", fmt.Sprintf("project: %s, template: %s, static: %v, dest: %s", name, template, static, dest))
 
 		// initialize a new instance of cgen
 		cgen := &app.CGen{}
@@ -76,7 +82,7 @@ var rootCmd = &cobra.Command{
 			})
 		}
 
-		here, err := os.Stat(pwd)
+		here, err := utils.EnsureDir(dest)
 		if err != nil {
 			app.Log.Fatal("current_dir", err)
 		}
@@ -91,11 +97,11 @@ var rootCmd = &cobra.Command{
 		}
 
 		// // check to see if directory is dirty.
-		if files, err := ioutil.ReadDir(pwd); err != nil {
-			app.Log.Fatal("ioutil.ReadDir(pwd)", err)
+		if files, err := ioutil.ReadDir(dest); err != nil {
+			app.Log.Fatal("ioutil.ReadDir", err)
 		} else {
 			if len(files) != 0 {
-				app.Confirm("this directory is not empty, do you want to continue?")
+				app.Confirm("the specified directory is not empty, do you want to continue?")
 			}
 		}
 
@@ -103,7 +109,7 @@ var rootCmd = &cobra.Command{
 			Name:           name,              // name of this project
 			TemplatesDir:   cgen.TemplatesDir, // directory of all cgen templates
 			Tempate:        template,          // selected cgen template
-			Destination:    pwd,               // destination directory for generated files
+			Destination:    dest,              // destination directory for generated files
 			PerformUpgrade: false,             // perform upgrade
 			StaticOnly:     false,             // only copy static files, no template interpolation
 			Verbose:        true,              // use verbose logging
@@ -114,7 +120,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		if err := cgen.Generator.Exec(); err != nil {
-			log.Fatal("generator_exec", err)
+			app.Log.Fatal("generator_exec", err)
 		}
 
 	},
@@ -146,6 +152,7 @@ func init() {
 
 	rootCmd.Flags().StringP("name", "n", "", "what do you want to call your newly generated project?")
 	rootCmd.Flags().StringP("template", "t", "", "specify a which template you would like to use.")
+	rootCmd.Flags().StringP("out", "o", pwd, "specify an existing directory to write to")
 
 }
 
