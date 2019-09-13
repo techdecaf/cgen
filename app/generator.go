@@ -1,7 +1,6 @@
 package app
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,10 +10,11 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/manifoldco/promptui"
+	"github.com/techdecaf/templates"
+	"github.com/techdecaf/utils"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -51,7 +51,8 @@ type Generator struct {
 	TemplateFiles   string `json:"TemplateFiles"`
 	TemplateName    string `json:"TemplateName"`
 	TemplatesDir    string `json:"TemplatesDir"`
-	TemplateHelpers template.FuncMap
+	TemplateHelpers templates.Functions
+	Variables       templates.Variables
 	Config          *Config                `json:"Config"`
 	Answers         map[string]interface{} `json:"Answers"`
 	Options         struct {
@@ -71,6 +72,12 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	if gen.Options.Verbose {
 		params.toJSON()
 	}
+
+	// variables applied in this order
+	// 1. cli options
+	// 2. answer file
+	// 3. environment variables
+	// 4. user prompt
 
 	// todo: validate inputs, that files exist etc
 	// default destination to current working directory or use project name
@@ -106,22 +113,10 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	gen.AnswersFile = filepath.Clean(path.Join(gen.Destination, ".cgen.yaml"))
 	gen.QuestionsFile = filepath.Clean(path.Join(gen.Source, "config.yaml"))
 	gen.TemplateFiles = filepath.Clean(path.Join(gen.Source, "template"))
-	gen.Config = &Config{}
 
-	gen.TemplateHelpers = template.FuncMap{
-		"ToTitle": strings.Title,
-		"ToUpper": strings.ToUpper,
-		"ToLower": strings.ToLower,
-		"Replace": strings.Replace,
-		"MkdirAll": func(relativePath string) (err error) {
-			err = os.MkdirAll(path.Join(gen.Destination, relativePath), 0700)
-			return err
-		},
-		"Touch": func(relativePath string) (err error) {
-			_, err = os.Create(path.Join(gen.Destination, relativePath))
-			return err
-		},
-	}
+	gen.Config = &Config{}
+	gen.Variables.Init()
+	gen.TemplateHelpers = gen.LoadHelpers()
 
 	// check for required project structure
 	if _, err := os.Stat(gen.TemplateFiles); os.IsNotExist(err) {
@@ -140,8 +135,16 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	byteValue, _ := ioutil.ReadAll(configYAML)
 	yaml.Unmarshal(byteValue, &gen.Config)
 
+	gen.AppendAnswer("Name", gen.Name)
 	gen.AppendAnswer("TemplateVersion", gen.Config.Version)
 	gen.AppendAnswer("Timestamp", time.Now().UTC().Format(time.RFC3339))
+
+	gen.Variables.Set(templates.Variable{
+		Key:         "PWD",
+		Value:       gen.Destination,
+		OverrideEnv: true,
+	})
+
 	return nil
 }
 
@@ -172,6 +175,8 @@ func (gen *Generator) Exec() error {
 
 // Copy from src to dest
 func (gen *Generator) Copy(src, dst string) error {
+	Log.Info("copy", fmt.Sprintf("reading: %s", src))
+
 	in, err := os.Open(src)
 	if err != nil {
 		return err
@@ -189,6 +194,7 @@ func (gen *Generator) Copy(src, dst string) error {
 	}
 	defer out.Close()
 
+	Log.Info("copy", fmt.Sprintf("writing: %s", src))
 	_, err = io.Copy(out, in)
 	if err != nil {
 		return err
@@ -211,49 +217,35 @@ func (gen *Generator) WalkFiles(inPath string, file os.FileInfo, err error) erro
 		return nil
 	}
 
-	gen.Log("debug", fmt.Sprintf("inPath %s", inPath), gen.Options.Verbose)
-	gen.Log("debug", fmt.Sprintf("TemplateFiles %s", gen.TemplateFiles), gen.Options.Verbose)
-	gen.Log("debug", fmt.Sprintf("Destination %s", gen.Destination), gen.Options.Verbose)
+	Log.Info("walk_files", fmt.Sprintf("source %s", inPath))
 
 	outPath := strings.Replace(inPath, gen.TemplateFiles, gen.Destination, 1)
-
-	gen.Log("debug", fmt.Sprintf("outPath %s", outPath), gen.Options.Verbose)
 
 	if err := os.MkdirAll(filepath.Dir(outPath), 0700); err != nil {
 		return err
 	}
 
 	if isTemplate {
+		Log.Info("walk_files", fmt.Sprintf("expanding template %s", outPath))
 		outPath = strings.Replace(outPath, filepath.Ext(outPath), "", 1)
-		gen.Log("info", fmt.Sprintf("Processing Template File %s", outPath), true)
 
-		templateFile, err := template.New(file.Name()).Funcs(gen.TemplateHelpers).ParseFiles(inPath)
+		generaged, err := templates.ExpandFile(inPath, gen.TemplateHelpers)
 		if err != nil {
 			return err
 		}
 
-		generated, err := os.Create(outPath)
-		if err != nil {
-			return err
-		}
-
-		gen.Log("info", fmt.Sprintf("Writing To: %s", outPath), true)
-		if err := templateFile.Execute(generated, gen.Answers); err != nil {
-			return err
-		}
-	} else {
-		gen.Copy(inPath, outPath)
-		gen.Log("info", fmt.Sprintf("Copying File To: %s", outPath), true)
+		Log.Info("walk_files", fmt.Sprintf("writing %s", outPath))
+		return utils.WriteFile(outPath, generaged)
 	}
 
-	return nil // no errors
+	return gen.Copy(inPath, outPath)
 }
 
 // Prompt user to respond in the console.
 func (gen *Generator) Prompt() error {
 	for _, q := range gen.Config.Questions {
 		res, err := gen.Ask(*q)
-		fmt.Printf("%s: %q\n", q.Name, res)
+		Log.Info("prompt", fmt.Sprintf("%s: %q\n", q.Name, res))
 		if err != nil {
 			return err
 		}
@@ -336,6 +328,12 @@ func (gen *Generator) AppendAnswer(name, val string) (answer string) {
 		gen.Answers[name] = val
 	}
 
+	gen.Variables.Set(templates.Variable{
+		Key:         name,
+		Value:       val,
+		OverrideEnv: true,
+	})
+
 	return val
 }
 
@@ -353,33 +351,47 @@ func (gen *Generator) Save() (out []byte, err error) {
 // RunAfter runs all commands found in config.yaml run_after prop.
 func (gen *Generator) RunAfter() (err error) {
 	for _, cmd := range gen.Config.RunAfter {
-		var command bytes.Buffer
+		var command string
 
-		cmdTemplate, err := template.New("cmd").Funcs(gen.TemplateHelpers).Parse(cmd)
-		if err != nil {
-			return err
-		}
-		if err := cmdTemplate.Execute(&command, gen.Answers); err != nil {
+		if command, err = templates.Expand(cmd, gen.TemplateHelpers); err != nil {
 			return err
 		}
 
-		fmt.Printf("RunningCommand: %s \n", command.String())
+		Log.Info("run_after", command)
 
-		split := strings.Split(command.String(), " ")
-		name := split[0]
-		arguments := split[1:len(split)]
+		Command := templates.CommandOptions{
+			Cmd:       command,
+			Dir:       gen.Destination,
+			UseStdOut: true,
+		}
 
-		// execute and break on error.
-		if err := execute(name, arguments...); err != nil {
+		if _, err := templates.Run(Command); err != nil {
 			return err
 		}
 	}
 	return err
 }
 
-// Log new messages
-func (gen *Generator) Log(lvl, ln string, verbose bool) {
-	if verbose {
-		fmt.Println(fmt.Sprintf("[%s]\t %s", lvl, ln))
-	}
+// LoadHelpers adds additional helper functions
+func (gen *Generator) LoadHelpers() templates.Functions {
+	helpers := &gen.Variables.Functions
+
+	// Custom Generator Functions
+	helpers.Add("MkdirAll", func(dir string) string {
+		path := path.Join(gen.Destination, dir)
+		if err := os.MkdirAll(path, 0700); err != nil {
+			Log.Info("error", fmt.Sprintf("%v", err))
+		}
+		return ""
+	})
+
+	helpers.Add("Touch", func(file string) string {
+		path := path.Join(gen.Destination, file)
+		if _, err := os.Create(path); err != nil {
+			Log.Info("error", fmt.Sprintf("%v", err))
+		}
+		return ""
+	})
+
+	return *helpers
 }

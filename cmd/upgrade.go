@@ -19,14 +19,13 @@ var upgradeCmd = &cobra.Command{
 		}
 
 		// initialize a new instance of cgen
-		cgen := &app.CGen{}
 		if err := cgen.Init(); err != nil {
 			app.Log.Fatal("cgen_init", err)
 		}
 
 		params := app.GeneratorParams{
 			Destination:    pwd,    // destination directory for generated files
-			PerformUpgrade: false,  // perform upgrade
+			PerformUpgrade: true,   // perform upgrade
 			StaticOnly:     static, // only copy static files, no template interpolation
 			Verbose:        true,   // use verbose logging
 		}
@@ -53,4 +52,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	upgradeCmd.Flags().BoolP("static-only", "s", false, "does not generate template files (most commonly used with update)")
+	upgradeCmd.Flags().StringP("path", "p", pwd, "to a directory with files to upgrade.")
 }

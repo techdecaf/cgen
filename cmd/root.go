@@ -19,14 +19,14 @@ var VERSION string
 // local variables
 var cfgFile string
 var pwd, _ = os.Getwd()
+var cgen = &app.CGen{}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "cgen",
 	Short: "A cross platform plugin-based project generator",
 	Long: `You can use cgen to dynamically configure new projects based
-   on your own standards and best pratices. See the README.md to get started.
-  `,
+   on your own standards and best pratices. See the README.md to get started.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
@@ -61,7 +61,6 @@ var rootCmd = &cobra.Command{
 		app.Log.Info("debugging", fmt.Sprintf("project: %s, template: %s, static: %v, dest: %s", name, template, static, dest))
 
 		// initialize a new instance of cgen
-		cgen := &app.CGen{}
 		if err := cgen.Init(); err != nil {
 			app.Log.Fatal("cgen_init", err)
 		}
@@ -143,6 +142,7 @@ func init() {
 	// will be global for your application.
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cgen.yaml)")
+	rootCmd.PersistentFlags().Bool("verbose", false, "enable verbose log messages")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
