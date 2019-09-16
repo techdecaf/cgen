@@ -58,6 +58,6 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	upgradeCmd.Flags().BoolP("expand-tmpl", "e", false, "does not generate template files")
+	upgradeCmd.Flags().BoolP("expand", "e", false, "expand template files in addition to upgrading static files.")
 	upgradeCmd.Flags().StringP("path", "p", pwd, "to a directory with files to upgrade.")
 }
