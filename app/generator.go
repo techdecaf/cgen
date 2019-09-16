@@ -84,6 +84,7 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	// check to see if an answers file exists in current dir
 	answerFile := path.Join(params.Destination, ".cgen.yaml")
 	if gen.Options.PerformUpgrade {
+		Log.Info("init", "performing upgrade")
 		// ensure answer file exists
 		if _, err := os.Stat(answerFile); err != nil {
 			return err
@@ -98,8 +99,11 @@ func (gen *Generator) Init(params GeneratorParams) error {
 		byteValue, _ := ioutil.ReadAll(answersYAML)
 		yaml.Unmarshal(byteValue, &update)
 
-		gen.Answers = update.Answers
 		gen.TemplateName = update.Template
+
+		for k, v := range update.Answers {
+			gen.AppendAnswer(k, fmt.Sprintf("%v", v))
+		}
 	} else {
 		gen.TemplateName = params.Tempate
 	}

@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/techdecaf/cgen/app"
+	"github.com/techdecaf/utils"
 )
 
 // upgradeCmd represents the upgrade command
@@ -11,10 +12,15 @@ var upgradeCmd = &cobra.Command{
 	Short: "this features is not currently supported pull request?",
 	Long:  `this features is not currently supported pull request?`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var static bool
+		var dest string
+		var expand bool
 		var err error
 
-		if static, err = cmd.Flags().GetBool("static-only"); err != nil {
+		if expand, err = cmd.Flags().GetBool("expand-tmpl"); err != nil {
+			app.Log.Fatal("cmd_flags", err)
+		}
+
+		if dest, err = cmd.Flags().GetString("path"); err != nil {
 			app.Log.Fatal("cmd_flags", err)
 		}
 
@@ -24,10 +30,11 @@ var upgradeCmd = &cobra.Command{
 		}
 
 		params := app.GeneratorParams{
-			Destination:    pwd,    // destination directory for generated files
-			PerformUpgrade: true,   // perform upgrade
-			StaticOnly:     static, // only copy static files, no template interpolation
-			Verbose:        true,   // use verbose logging
+			TemplatesDir:   cgen.TemplatesDir,  // directory of all cgen templates
+			Destination:    utils.PathTo(dest), // destination directory for generated files
+			PerformUpgrade: true,               // perform upgrade
+			StaticOnly:     !expand,            // only copy static files, no template interpolation
+			Verbose:        true,               // use verbose logging
 		}
 
 		if err := cgen.Generator.Init(params); err != nil {
@@ -51,6 +58,6 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	upgradeCmd.Flags().BoolP("static-only", "s", false, "does not generate template files (most commonly used with update)")
+	upgradeCmd.Flags().BoolP("expand-tmpl", "e", false, "does not generate template files")
 	upgradeCmd.Flags().StringP("path", "p", pwd, "to a directory with files to upgrade.")
 }
