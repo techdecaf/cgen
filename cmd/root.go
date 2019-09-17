@@ -44,7 +44,7 @@ var rootCmd = &cobra.Command{
 			app.Log.Fatal("cmd_flags", err)
 		}
 
-		if dest, err = cmd.Flags().GetString("out"); err != nil {
+		if dest, err = cmd.Flags().GetString("path"); err != nil {
 			app.Log.Fatal("cmd_flags", err)
 		}
 		// resolve the path
