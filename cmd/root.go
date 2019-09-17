@@ -44,7 +44,7 @@ var rootCmd = &cobra.Command{
 			app.Log.Fatal("cmd_flags", err)
 		}
 
-		if dest, err = cmd.Flags().GetString("out"); err != nil {
+		if dest, err = cmd.Flags().GetString("path"); err != nil {
 			app.Log.Fatal("cmd_flags", err)
 		}
 		// resolve the path
@@ -152,7 +152,7 @@ func init() {
 
 	rootCmd.Flags().StringP("name", "n", "", "what do you want to call your newly generated project?")
 	rootCmd.Flags().StringP("template", "t", "", "specify a which template you would like to use.")
-	rootCmd.Flags().StringP("out", "o", pwd, "specify an existing directory to write to")
+	rootCmd.Flags().StringP("path", "p", pwd, "to a directory with files to upgrade.")
 
 }
 
