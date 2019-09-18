@@ -298,7 +298,7 @@ func (gen *Generator) Ask(q Question) (answer string, err error) {
 		if match, _ := regexp.MatchString(truthRE, answer); match {
 			answer = "true"
 		} else {
-			answer = "false"
+			answer = ""
 		}
 	case "select":
 		prompt := promptui.Select{
@@ -325,9 +325,9 @@ func (gen *Generator) AppendAnswer(name, val string) (answer string) {
 	// append answer to the answers map.
 	switch val {
 	case "true":
-		gen.Answers[name] = true
+		gen.Answers[name] = "true"
 	case "false":
-		gen.Answers[name] = false
+		gen.Answers[name] = ""
 	default:
 		gen.Answers[name] = val
 	}
