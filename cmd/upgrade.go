@@ -16,7 +16,7 @@ var upgradeCmd = &cobra.Command{
 		var expand bool
 		var err error
 
-		if expand, err = cmd.Flags().GetBool("expand-tmpl"); err != nil {
+		if expand, err = cmd.Flags().GetBool("expand"); err != nil {
 			app.Log.Fatal("cmd_flags", err)
 		}
 

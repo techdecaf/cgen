@@ -43,6 +43,12 @@ tasks:
       - "aws s3 sync dist s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/{{.CI_COMMIT_TAG}}"
       - "aws s3 sync dist s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/latest"
 
+  release:
+    description: bump current version and push to master.
+    commands:
+      - git push
+      - cgen bump --level minor --push
+
   login:
     description: checkout temporary aws access keys
     commands:
