@@ -46,8 +46,8 @@ tasks:
   release:
     description: bump current version and push to master.
     commands:
+      - cgen bump --level patch --push
       - git push
-      - cgen bump --level minor --push
 
   login:
     description: checkout temporary aws access keys
