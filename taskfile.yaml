@@ -17,6 +17,10 @@ tasks:
     description: install all required dependencies
     commands: [go get, go install]
 
+  integration:
+    description: run all unit and integration tests
+    pre: [dependencies, test]
+
   build:
     description: compile window, linux, osx x64
     pre: [clean, dependencies]
