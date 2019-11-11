@@ -23,7 +23,7 @@ var rootCmd = &cobra.Command{
 	Use:   "cgen",
 	Short: "A cross platform plugin-based project generator",
 	Long: `You can use cgen to dynamically configure new projects based
-   on your own standards and best pratices. See the README.md to get started.`,
+   on your own standards and best practices. See the README.md to get started.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {

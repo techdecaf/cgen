@@ -12,6 +12,7 @@ type GeneratorParams struct {
 	Tempate        string `json:"Tempate"`        // selected cgen template
 	Destination    string `json:"Destination"`    // destination directory for generated files
 	PerformUpgrade bool   `json:"PerformUpgrade"` // perform upgrade
+	PromoteFile    bool   `json:"PromoteFile"`    // run file promotion mode
 	StaticOnly     bool   `json:"StaticOnly"`     // only copy static files, no template interpolation
 	Verbose        bool   `json:"Verbose"`        // use verbose logging
 }

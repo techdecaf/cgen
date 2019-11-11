@@ -58,6 +58,7 @@ type Generator struct {
 	Options         struct {
 		StaticOnly     bool `json:"StaticOnly"`
 		PerformUpgrade bool `json:"PerformUpgrade"`
+		PromoteFile    bool `json:"PromoteFile"`
 		Verbose        bool `json:"Verbose"`
 	}
 }
@@ -67,6 +68,7 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	// set options
 	gen.Options.StaticOnly = params.StaticOnly
 	gen.Options.PerformUpgrade = params.PerformUpgrade
+	gen.Options.PromoteFile = params.PromoteFile
 	gen.Options.Verbose = params.Verbose
 
 	if gen.Options.Verbose {
@@ -83,8 +85,13 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	// default destination to current working directory or use project name
 	// check to see if an answers file exists in current dir
 	answerFile := path.Join(params.Destination, ".cgen.yaml")
-	if gen.Options.PerformUpgrade {
-		Log.Info("init", "performing upgrade")
+	if gen.Options.PerformUpgrade || gen.Options.PromoteFile {
+		if gen.Options.PerformUpgrade {
+			Log.Info("init", "running in Upgrade mode")
+		}
+		if gen.Options.PromoteFile {
+			Log.Info("init", "running in PromoteFile mode")
+		}
 		// ensure answer file exists
 		if _, err := os.Stat(answerFile); err != nil {
 			return err
@@ -198,7 +205,7 @@ func (gen *Generator) Copy(src, dst string) error {
 	}
 	defer out.Close()
 
-	Log.Info("copy", fmt.Sprintf("writing: %s", src))
+	Log.Info("copy", fmt.Sprintf("writing: %s", dst))
 	_, err = io.Copy(out, in)
 	if err != nil {
 		return err
