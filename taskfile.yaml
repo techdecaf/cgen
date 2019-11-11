@@ -54,3 +54,7 @@ tasks:
     commands:
       # expand the file, and pipe to write, if no errors default to the string "success"
       - "echo {{ExpandFile `docs/README.md` | WriteFile `README.md` | default `docs updated`}}"
+
+  upgrade:
+    description: upgrade project from cgen template
+    commands: ["cgen upgrade"]
