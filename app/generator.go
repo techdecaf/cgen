@@ -86,9 +86,11 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	// check to see if an answers file exists in current dir
 	answerFile := path.Join(params.Destination, ".cgen.yaml")
 	if gen.Options.PerformUpgrade || gen.Options.PromoteFile {
+
 		if gen.Options.PerformUpgrade {
 			Log.Info("init", "running in Upgrade mode")
 		}
+
 		if gen.Options.PromoteFile {
 			Log.Info("init", "running in PromoteFile mode")
 		}
@@ -110,6 +112,10 @@ func (gen *Generator) Init(params GeneratorParams) error {
 
 		for k, v := range update.Answers {
 			gen.AppendAnswer(k, fmt.Sprintf("%v", v))
+			// handle `Name` as a special case, and set params from answer file.
+			if k == "Name" {
+				params.Name = fmt.Sprintf("%v", v)
+			}
 		}
 	} else {
 		gen.TemplateName = params.Tempate
@@ -325,22 +331,23 @@ func (gen *Generator) Ask(q Question) (answer string, err error) {
 }
 
 // AppendAnswer to gen.Answers map
-func (gen *Generator) AppendAnswer(name, val string) (answer string) {
+func (gen *Generator) AppendAnswer(key, val string) (answer string) {
+	// Log.Info("answer_file", fmt.Sprintf("%v: %v", key, val))
 	if gen.Answers == nil {
 		gen.Answers = make(map[string]interface{})
 	}
 	// append answer to the answers map.
 	switch val {
 	case "true":
-		gen.Answers[name] = "true"
+		gen.Answers[key] = "true"
 	case "false":
-		gen.Answers[name] = ""
+		gen.Answers[key] = ""
 	default:
-		gen.Answers[name] = val
+		gen.Answers[key] = val
 	}
 
 	gen.Variables.Set(templates.Variable{
-		Key:         name,
+		Key:         key,
 		Value:       val,
 		OverrideEnv: true,
 	})
