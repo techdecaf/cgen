@@ -19,7 +19,7 @@ var promoteCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// parse flags
 		var src, file, commit string
-		var push bool
+		var push, asTemplate bool
 		var err error
 
 		if file, err = cmd.Flags().GetString("file"); err != nil {
@@ -27,6 +27,10 @@ var promoteCmd = &cobra.Command{
 		}
 
 		if commit, err = cmd.Flags().GetString("commit"); err != nil {
+			app.Log.Fatal("cmd_flags", err)
+		}
+
+		if asTemplate, err = cmd.Flags().GetBool("as-template"); err != nil {
 			app.Log.Fatal("cmd_flags", err)
 		}
 
@@ -59,12 +63,21 @@ var promoteCmd = &cobra.Command{
 		var source = path.Join(cgen.Generator.Destination, file)
 		var template = path.Join(cgen.Generator.Source, "template", file)
 
+		if asTemplate {
+			template = fmt.Sprintf("%v.tmpl", template)
+		}
+
 		if err := cgen.Generator.Copy(source, template); err != nil {
 			app.Log.Fatal("cgen_promote", err)
 		}
 
-		fmt.Printf("if --commit [-c] <message> run a commit on the cgen repo: %v\n", commit)
-		fmt.Printf("if --push also push the template: %v\n", push)
+		if commit != "" {
+			fmt.Printf("the --commit flag has not yet been implemented, please consider a pull request (%v) \n", commit)
+		}
+
+		if push {
+			fmt.Printf("the --push flag has not yet been implemented, please consider a pull request (%v) \n", push)
+		}
 
 	},
 }
@@ -82,7 +95,9 @@ func init() {
 	// is called directly, e.g.:
 	// promoteCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	promoteCmd.Flags().StringP("file", "f", "", "relative file path to the file you wish to promote.")
-	promoteCmd.Flags().StringP("commit", "c", "", "[coming soon] commit the promoted file to your cgen template.")
-	promoteCmd.Flags().Bool("push", false, "[coming soon] push changes to your cgen template to its remote.")
+	promoteCmd.Flags().StringP("commit", "c", "", "commit the promoted file to your cgen template.")
 	promoteCmd.Flags().StringP("path", "p", pwd, "the root directory containing a .cgen.yaml file")
+
+	promoteCmd.Flags().Bool("as-template", false, "append .tmpl to the end of the file name")
+	promoteCmd.Flags().Bool("push", false, "push changes to your cgen template to its remote.")
 }
