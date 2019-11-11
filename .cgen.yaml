@@ -1,0 +1,6 @@
+template: decaf-cli
+answers:
+  Description: a cross platform plugin-based project generator
+  Name: cgen
+  TemplateVersion: 0.0.1
+  Timestamp: "2019-10-14T15:20:54Z"
