@@ -15,7 +15,7 @@ test:
   stage: test
   script:
     - apk add git
-    - go run . -h
+    - tasks run integration
     - go run . install https://github.com/techdecaf/cgen-template
 
 deploy:

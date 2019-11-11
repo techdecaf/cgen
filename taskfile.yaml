@@ -27,6 +27,10 @@ tasks:
       - GOOS=linux go {{.flags}} -o dist/linux/{{.CI_PROJECT_NAME}} -v
       - GOOS=windows go {{.flags}} -o dist/windows/{{.CI_PROJECT_NAME}}.exe -v
 
+  test:
+    description: run unit tests
+    commands: ["go test", "go run . -h"]
+
   clean:
     description: removes all files listed in .gitignore
     commands: ["rm -rf dist"]
@@ -48,6 +52,15 @@ tasks:
     commands:
       - cgen bump --level patch --push
       - git push
+
+  docs:
+    description: auto generate documentation
+    variables:
+      # run the go command to generate help text from cobra
+      HELP_TEXT: "{{EXEC `go run . -h`}}"
+    commands:
+      # expand the file, and pipe to write, if no errors default to the string "success"
+      - "echo {{ExpandFile `docs/README.tmpl` | WriteFile `README.md` | default `success`}}"
 
   login:
     description: checkout temporary aws access keys
