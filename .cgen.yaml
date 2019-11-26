@@ -1,0 +1,7 @@
+template: decaf-cli
+answers:
+  Description: cgen is designed to be a cross platform plugin-based project generator.
+  Name: cgen
+  Template: decaf-cli
+  TemplateVersion: 0.0.1
+  Timestamp: "2019-11-26T16:42:00Z"
