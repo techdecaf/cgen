@@ -1,18 +1,22 @@
 package app
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
 	"github.com/manifoldco/promptui"
+	"github.com/mholt/archiver/v3"
 	"github.com/techdecaf/templates"
 	"github.com/techdecaf/utils"
 	yaml "gopkg.in/yaml.v2"
@@ -219,10 +223,48 @@ func (gen *Generator) Copy(src, dst string) error {
 	return out.Close()
 }
 
+type AppConfigProperties map[string]string
+
+func ReadPropertiesFile(filename string) (AppConfigProperties, error) {
+	config := AppConfigProperties{}
+
+	if len(filename) == 0 {
+		return config, nil
+	}
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if equal := strings.Index(line, "="); equal >= 0 {
+			if key := strings.TrimSpace(line[:equal]); len(key) > 0 {
+				value := ""
+				if len(line) > equal {
+					value = strings.TrimSpace(line[equal+1:])
+				}
+				config[key] = value
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+
+	return config, nil
+}
+
 // WalkFiles files as part of the generator
 func (gen *Generator) WalkFiles(inPath string, file os.FileInfo, err error) error {
 	// identify template files
 	isTemplate := filepath.Ext(inPath) == ".tmpl"
+	isPtr := filepath.Ext(inPath) == ".ptr"
 
 	// skip all directories
 	if file.IsDir() {
@@ -246,13 +288,55 @@ func (gen *Generator) WalkFiles(inPath string, file os.FileInfo, err error) erro
 		Log.Info("walk_files", fmt.Sprintf("expanding template %s", outPath))
 		outPath = strings.Replace(outPath, filepath.Ext(outPath), "", 1)
 
-		generaged, err := templates.ExpandFile(inPath, gen.TemplateHelpers)
+		generated, err := templates.ExpandFile(inPath, gen.TemplateHelpers)
 		if err != nil {
 			return err
 		}
 
 		Log.Info("walk_files", fmt.Sprintf("writing %s", outPath))
-		return utils.WriteFile(outPath, generaged)
+		return utils.WriteFile(outPath, generated)
+	}
+
+	if isPtr {
+		var cmd *exec.Cmd
+		Log.Info("walk_files", fmt.Sprintf("expanding pointer %s", outPath))
+		gen.Copy(inPath, outPath)
+		props, err := ReadPropertiesFile(outPath)
+		if err != nil {
+			return err
+		}
+		baseName := strings.Replace(outPath, filepath.Ext(outPath), "", 1)
+		filename := filepath.Base(baseName)
+		gitCmd := fmt.Sprintf("git archive --remote=%s HEAD:%s %s -o %s.tar", props["repository"], props["path"], filename, baseName)
+
+		if runtime.GOOS == "windows" {
+			cmd = exec.Command("cmd", gitCmd)
+		} else {
+			cmd = exec.Command("bash", "-c", gitCmd)
+		}
+		if _, err = cmd.CombinedOutput(); err != nil {
+			return err
+		}
+
+		if err = archiver.Unarchive(fmt.Sprintf("%s.tar", baseName), fmt.Sprintf("%s-tmp", baseName)); err != nil {
+			return err
+		}
+
+		if err = os.Rename(fmt.Sprintf("%s-tmp/%s", baseName, filename), baseName); err != nil {
+			return err
+		}
+
+		if err = os.Remove(outPath); err != nil {
+			return err
+		}
+		if err = os.Remove(fmt.Sprintf("%s-tmp", baseName)); err != nil {
+			return err
+		}
+		if err = os.Remove(fmt.Sprintf("%s.tar", baseName)); err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	return gen.Copy(inPath, outPath)

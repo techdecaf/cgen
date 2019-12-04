@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"path"
 
 	"github.com/spf13/cobra"
@@ -13,7 +14,7 @@ func doPromote(cmd *cobra.Command, args []string) {
 	// parse flags
 	var file []string
 	var src, commit string
-	var push, asTemplate bool
+	var push, asTemplate, asPointer bool
 	var err error
 
 	if file, err = cmd.Flags().GetStringArray("files"); err != nil {
@@ -25,6 +26,9 @@ func doPromote(cmd *cobra.Command, args []string) {
 	}
 
 	if asTemplate, err = cmd.Flags().GetBool("as-template"); err != nil {
+		app.Log.Fatal("cmd_flags", err)
+	}
+	if asPointer, err = cmd.Flags().GetBool("as-pointer"); err != nil {
 		app.Log.Fatal("cmd_flags", err)
 	}
 
@@ -60,6 +64,32 @@ func doPromote(cmd *cobra.Command, args []string) {
 
 		if asTemplate {
 			template = fmt.Sprintf("%v.tmpl", template)
+		}
+		if asPointer {
+			var repo, filePath string
+			var f *os.File
+			template = fmt.Sprintf("%v.ptr", template)
+			repoQuestion := app.Question{
+				Name:   "repository",
+				Type:   "string",
+				Prompt: "Repository? ([user@]server:project.git format)",
+			}
+			filePathQuestion := app.Question{
+				Name:   "file_path",
+				Type:   "string",
+				Prompt: "Repository file path? (path of the [user@]server:project.git:/template/test/jest.config.js is template/test)",
+			}
+			if repo, err = cgen.Generator.Ask(repoQuestion); err != nil {
+				app.Log.Fatal("ptr_repository", err)
+			}
+			if filePath, err = cgen.Generator.Ask(filePathQuestion); err != nil {
+				app.Log.Fatal("ptr_file_path", err)
+			}
+			if f, err = os.Create(source); err != nil {
+				app.Log.Fatal("ptr_file_create", err)
+			}
+			fmt.Fprintln(f, fmt.Sprintf("repository=%s", repo))
+			fmt.Fprintln(f, fmt.Sprintf("path=%s", filePath))
 		}
 
 		if err := cgen.Generator.Copy(source, template); err != nil {
@@ -109,5 +139,6 @@ func init() {
 	promoteCmd.Flags().StringP("path", "p", pwd, "the root directory containing a .cgen.yaml file")
 
 	promoteCmd.Flags().Bool("as-template", false, "append .tmpl to the end of the file name")
+	promoteCmd.Flags().Bool("as-pointer", false, "append .ptr to the end of the file name")
 	promoteCmd.Flags().Bool("push", false, "push changes to your cgen template to its remote.")
 }

@@ -10,6 +10,7 @@ type GeneratorParams struct {
 	Name           string `json:"Name"`           // name of this project
 	TemplatesDir   string `json:"TemplatesDir"`   // directory of all cgen templates
 	Tempate        string `json:"Tempate"`        // selected cgen template
+	Pointer        string `json:"Pointer"`        // pointer file to different repository
 	Destination    string `json:"Destination"`    // destination directory for generated files
 	PerformUpgrade bool   `json:"PerformUpgrade"` // perform upgrade
 	PromoteFile    bool   `json:"PromoteFile"`    // run file promotion mode
