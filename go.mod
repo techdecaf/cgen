@@ -17,6 +17,7 @@ require (
 	github.com/manifoldco/promptui v0.3.2
 	github.com/mattn/go-colorable v0.1.2
 	github.com/mattn/go-isatty v0.0.9
+	github.com/mholt/archiver/v3 v3.3.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nicksnyder/go-i18n v1.10.0
 	github.com/pelletier/go-toml v1.4.0

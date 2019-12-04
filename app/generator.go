@@ -11,10 +11,12 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
 	"github.com/manifoldco/promptui"
+	"github.com/mholt/archiver/v3"
 	"github.com/techdecaf/templates"
 	"github.com/techdecaf/utils"
 	yaml "gopkg.in/yaml.v2"
@@ -296,6 +298,7 @@ func (gen *Generator) WalkFiles(inPath string, file os.FileInfo, err error) erro
 	}
 
 	if isPtr {
+		var cmd *exec.Cmd
 		Log.Info("walk_files", fmt.Sprintf("expanding pointer %s", outPath))
 		gen.Copy(inPath, outPath)
 		props, err := ReadPropertiesFile(outPath)
@@ -304,16 +307,32 @@ func (gen *Generator) WalkFiles(inPath string, file os.FileInfo, err error) erro
 		}
 		baseName := strings.Replace(outPath, filepath.Ext(outPath), "", 1)
 		filename := filepath.Base(baseName)
-		fileDir := filepath.Dir(baseName)
+		gitCmd := fmt.Sprintf("git archive --remote=%s HEAD:%s %s -o %s.tar", props["repository"], props["path"], filename, baseName)
 
-		gitCmd := fmt.Sprintf("git archive -v --remote=%s HEAD:%s %s | tar -C %s -x", props["repository"], props["path"], filename, fileDir)
-		_, err = exec.Command("bash", "-c", gitCmd).CombinedOutput()
-		if err != nil {
+		if runtime.GOOS == "windows" {
+			cmd = exec.Command("cmd", gitCmd)
+		} else {
+			cmd = exec.Command("bash", "-c", gitCmd)
+		}
+		if _, err = cmd.CombinedOutput(); err != nil {
 			return err
 		}
 
-		err = os.Remove(outPath)
-		if err != nil {
+		if err = archiver.Unarchive(fmt.Sprintf("%s.tar", baseName), fmt.Sprintf("%s-tmp", baseName)); err != nil {
+			return err
+		}
+
+		if err = os.Rename(fmt.Sprintf("%s-tmp/%s", baseName, filename), baseName); err != nil {
+			return err
+		}
+
+		if err = os.Remove(outPath); err != nil {
+			return err
+		}
+		if err = os.Remove(fmt.Sprintf("%s-tmp", baseName)); err != nil {
+			return err
+		}
+		if err = os.Remove(fmt.Sprintf("%s.tar", baseName)); err != nil {
 			return err
 		}
 
