@@ -8,13 +8,16 @@ cache:
   paths:
     - $CI_PROJECT_DIR/dist
 
+before_script:
+  - apk add git curl
+  - sh -c "$(curl -fsSL https://raw.github.com/techdecaf/tasks/master/install.sh)"
+
 stages: [test, deploy]
 
 test:
   image: golang:1.13-alpine
   stage: test
   script:
-    - apk add git
     - tasks run integration
     - go run . install https://github.com/techdecaf/cgen-template
 
