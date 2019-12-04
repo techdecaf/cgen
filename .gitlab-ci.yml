@@ -8,6 +8,9 @@ cache:
   paths:
     - $CI_PROJECT_DIR/dist
 
+before_script:
+  - sh -c "$(curl -fsSL https://raw.github.com/techdecaf/tasks/master/install.sh)"
+
 stages: [test, deploy]
 
 test:
