@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -88,7 +87,7 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	// todo: validate inputs, that files exist etc
 	// default destination to current working directory or use project name
 	// check to see if an answers file exists in current dir
-	answerFile := path.Join(params.Destination, ".cgen.yaml")
+	answerFile := filepath.Join(params.Destination, ".cgen.yaml")
 	if gen.Options.PerformUpgrade || gen.Options.PromoteFile {
 
 		if gen.Options.PerformUpgrade {
@@ -128,12 +127,12 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	// path to generators
 	gen.Name = params.Name
 	gen.TemplatesDir = params.TemplatesDir
-	gen.Source = path.Join(gen.TemplatesDir, gen.TemplateName)
+	gen.Source = filepath.Join(gen.TemplatesDir, gen.TemplateName)
 
 	gen.Destination = params.Destination
-	gen.AnswersFile = filepath.Clean(path.Join(gen.Destination, ".cgen.yaml"))
-	gen.QuestionsFile = filepath.Clean(path.Join(gen.Source, "config.yaml"))
-	gen.TemplateFiles = filepath.Clean(path.Join(gen.Source, "template"))
+	gen.AnswersFile = filepath.Join(gen.Destination, ".cgen.yaml")
+	gen.QuestionsFile = filepath.Join(gen.Source, "config.yaml")
+	gen.TemplateFiles = filepath.Join(gen.Source, "template")
 
 	gen.Config = &Config{}
 	gen.Variables.Init()
@@ -480,7 +479,7 @@ func (gen *Generator) LoadHelpers() templates.Functions {
 
 	// Custom Generator Functions
 	helpers.Add("MkdirAll", func(dir string) string {
-		path := path.Join(gen.Destination, dir)
+		path := filepath.Join(gen.Destination, dir)
 		if err := os.MkdirAll(path, 0700); err != nil {
 			Log.Info("error", fmt.Sprintf("%v", err))
 		}
@@ -488,7 +487,7 @@ func (gen *Generator) LoadHelpers() templates.Functions {
 	})
 
 	helpers.Add("Touch", func(file string) string {
-		path := path.Join(gen.Destination, file)
+		path := filepath.Join(gen.Destination, file)
 		if _, err := os.Create(path); err != nil {
 			Log.Info("error", fmt.Sprintf("%v", err))
 		}

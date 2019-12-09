@@ -35,8 +35,8 @@ func (app *CGen) Init() (err error) {
 		return err
 	}
 
-	app.BaseDir = filepath.Clean(path.Join(usr.HomeDir, ".cgen"))
-	app.TemplatesDir = filepath.Clean(path.Join(app.BaseDir, "generators"))
+	app.BaseDir = filepath.Join(usr.HomeDir, ".cgen")
+	app.TemplatesDir = filepath.Join(app.BaseDir, "generators")
 	app.Generator = Generator{}
 
 	if _, err := os.Stat(app.BaseDir); os.IsNotExist(err) {
@@ -53,8 +53,8 @@ func (app *CGen) Init() (err error) {
 // Install a generator from git.
 func (app *CGen) Install(url string) (out string, err error) {
 	// what to name the generator dir.
-	as := strings.TrimSuffix(path.Base(url), path.Ext(url))
-	dir := filepath.Clean(path.Join(app.TemplatesDir, as))
+	as := strings.TrimSuffix(filepath.Base(url), filepath.Ext(url))
+	dir := filepath.Join(app.TemplatesDir, as)
 
 	GitClone := templates.CommandOptions{
 		Cmd:       fmt.Sprintf("git clone '%s' '%s'", url, dir),
