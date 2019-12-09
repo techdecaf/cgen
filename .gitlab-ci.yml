@@ -1,54 +1,31 @@
 # FULL DOCUMENTATION CAN BE FOUND HERE: #https://docs.gitlab.com/ce/ci/yaml/
 
-# This file is a template, and might need editing before it works on your project.
-# Official framework image. Look for the different tagged releases at:
-# https://hub.docker.com/r/library/node/tags/
-image: golang:1.11-alpine
-# image: node:8.11-alpine
-
-variables:
-  PROJECT_PATH: "/go/src/github.com/techdecaf/cgen"
+# image: golang:1.13-alpine
 
 # This folder is cached between builds
 # http://docs.gitlab.com/ce/ci/yaml/README.html#cache
 cache:
   paths:
-    - /apt-cache
-    - /go/src
+    - $CI_PROJECT_DIR/dist
 
-# run in order.
-stages:
-  - test
-  - deploy
+before_script:
+  - apk add git curl
+  - sh -c "$(curl -fsSL https://raw.github.com/techdecaf/tasks/master/install.sh)"
 
-# Pick zero or more services to be used on all builds.
-# Only needed when using a docker container to run your tests in.
-# Check out: http://docs.gitlab.com/ce/ci/docker/using_docker_images.html#what-is-service
-services:
-# you can specify a alias to access the locally attached service.
-#  - redis:latest
-#    alias: redis
-#  - mongo:3.4
-
-# runs before each job
-# before_script:
-# - apk add make curl git
+stages: [test, deploy]
 
 test:
-  image: golang:1.11-alpine
+  image: golang:1.13-alpine
   stage: test
   script:
-    - apk add make curl git
-    - mkdir -p $PROJECT_PATH && cd $_
-    - cp -r $CI_PROJECT_DIR/* .
-    - make clean install test build
-  # coverage: /All files\s*\|\s*([\d\.]+)/
+    - tasks run integration
+    - go run . install https://github.com/techdecaf/cgen-template
 
 deploy:
-  image: mesosphere/aws-cli:1.14.5
+  image: techdecaf/ci:v1.3.0
   stage: deploy
   script:
-    - eval $(curl -s "$DECAF_URL/keys/aws/set/env/linux/website-update?jwt=$DECAF_TOKEN")
-    - make publish
+    - eval $(tasks run login --log false)
+    - tasks run publish
   only:
     - master
