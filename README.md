@@ -15,20 +15,7 @@
   - [Contribution Guide](#contribution-guide)
   - [Credits](#credits)
 
-<<<<<<< HEAD
-- [cgen project generator](#cgen-project-generator)
-  - [Download and Install cgen](#download-and-install-cgen)
-    - [upgrading using curl](#upgrading-using-curl)
-  - [Installing a template](#installing-a-template)
-  - [Creating Your own Template Plugin](#creating-your-own-template-plugin)
-  - [Template Operators Operators](#template-operators-operators)
-  - [Updating a template](#updating-a-template)
-    - [Full project generation](#full-project-generation)
-    - [Updating static files only](#updating-static-files-only)
-  - [Bumping a project version](#bumping-a-project-version)
-=======
 ## Download and Install
->>>>>>> dev
 
 ```bash
 sh -c "$(curl -fsSL https://raw.github.com/techdecaf/cgen/master/install.sh)"
