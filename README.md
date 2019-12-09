@@ -21,6 +21,10 @@
 sh -c "$(curl -fsSL https://raw.github.com/techdecaf/cgen/master/install.sh)"
 ```
 
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.github.com/techdecaf/cgen/master/install.ps1'))
+```
+
 Download Links
 
 - [windows](http://github.techdecaf.io/cgen/latest/windows/cgen.exe)
