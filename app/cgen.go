@@ -54,10 +54,10 @@ func (app *CGen) Init() (err error) {
 func (app *CGen) Install(url string) (out string, err error) {
 	// what to name the generator dir.
 	as := strings.TrimSuffix(path.Base(url), path.Ext(url))
-	dir := path.Join(app.TemplatesDir, as)
+	dir := filepath.Clean(path.Join(app.TemplatesDir, as))
 
 	GitClone := templates.CommandOptions{
-		Cmd:       fmt.Sprintf("git clone %s %s", url, dir),
+		Cmd:       fmt.Sprintf("git clone '%s' '%s'", url, dir),
 		UseStdOut: true,
 	}
 	return templates.Run(GitClone)
