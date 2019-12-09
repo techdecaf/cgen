@@ -25,7 +25,7 @@ deploy:
   image: techdecaf/ci:v1.3.0
   stage: deploy
   script:
-    - eval $(tasks run login --log false)
+    - eval $(tasks run --silent login)
     - tasks run publish
   only:
     - master
