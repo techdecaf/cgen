@@ -8,7 +8,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.We
 
 Download Links
 
-- [windows]({{.DOWNLOAD_URI}}/windows/{{.CI_PROJECT_NAME}}.exe)
+- [windows]({{.DOWNLOAD_URI}}/latest/windows/{{.CI_PROJECT_NAME}}.exe)
 - [mac]({{.DOWNLOAD_URI}}/latest/darwin/{{.CI_PROJECT_NAME}})
 - [linux]({{.DOWNLOAD_URI}}/latest/linux/{{.CI_PROJECT_NAME}})
 

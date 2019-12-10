@@ -5,8 +5,7 @@
 # This folder is cached between builds
 # http://docs.gitlab.com/ce/ci/yaml/README.html#cache
 cache:
-  paths:
-    - $CI_PROJECT_DIR/dist
+  paths: [$CI_PROJECT_DIR/dist]
 
 before_script:
   - apk add git curl
@@ -25,7 +24,7 @@ deploy:
   image: techdecaf/ci:v1.3.0
   stage: deploy
   script:
-    - eval $(tasks run --silent login)
+    - eval $(tasks run login --log false)
     - tasks run publish
   only:
     - master

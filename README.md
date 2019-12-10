@@ -27,7 +27,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.We
 
 Download Links
 
-- [windows](http://github.techdecaf.io/cgen/latest/windows/cgen.exe)
+- [windows](http://github.techdecaf.io/cgen/latest/latest/windows/cgen.exe)
 - [mac](http://github.techdecaf.io/cgen/latest/latest/darwin/cgen)
 - [linux](http://github.techdecaf.io/cgen/latest/latest/linux/cgen)
 
