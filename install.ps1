@@ -1,12 +1,11 @@
 $APP_NAME = "cgen"
 $BUCKET_URL = "http://github.techdecaf.io"
-# $INSTALL_PATH = "$env:USERPROFILE\bin"
-$INSTALL_PATH = "c:\windows\system32"
+$INSTALL_PATH = "c:\windows"
 
-$APP_BINARY = "$INSTALL_PATH\cgen.exe"
+$APP_BINARY = "$INSTALL_PATH\$APP_NAME.exe"
 $LATEST_STABLE = "$BUCKET_URL/$APP_NAME/latest/windows/$APP_NAME.exe"
 
-if (Test-Path C:\Windows\System32\cgen.exe){
+if (Test-Path $APP_BINARY){
   echo "[Installed] $APP_NAME version: $(&$APP_NAME --version)"
 }
 
