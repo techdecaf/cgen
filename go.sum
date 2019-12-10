@@ -194,6 +194,8 @@ github.com/techdecaf/templates v0.2.8 h1:jJ1xTsui5g8rTDHJ9bMAOQV9yXKHEBFOB9nTtCv
 github.com/techdecaf/templates v0.2.8/go.mod h1:X01iQtRscRCDLGnNlADjgUxOoz9NLjK9cll7yaTKcqE=
 github.com/techdecaf/templates v0.2.9 h1:+QvCBw3w7FQxzNhAsYy3/gX6C2z3f5i6+ykrf1YMTUI=
 github.com/techdecaf/templates v0.2.9/go.mod h1:X01iQtRscRCDLGnNlADjgUxOoz9NLjK9cll7yaTKcqE=
+github.com/techdecaf/templates v0.2.11 h1:8sgY56YPFT56uwt0nEEny7+Ku1r+++lG0ODpWwjHv5Q=
+github.com/techdecaf/templates v0.2.11/go.mod h1:X01iQtRscRCDLGnNlADjgUxOoz9NLjK9cll7yaTKcqE=
 github.com/techdecaf/utils v0.0.1 h1:aNZo9A9ODtTHNBvUDhyNPJuAdszsw7NdRcvlHenyoHA=
 github.com/techdecaf/utils v0.0.1/go.mod h1:9WNgI+H0xCYHPkBaFXe9TM8ccO5cVYk6z2GiQC2wS5A=
 github.com/techdecaf/utils v0.0.2 h1:oPWVtY7RnRcU+jF7S7lbXCgw79nS2nWReCig/GsqSVE=
