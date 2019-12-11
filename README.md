@@ -27,9 +27,9 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.We
 
 Download Links
 
-- [windows](http://github.techdecaf.io/cgen/latest/latest/windows/cgen.exe)
-- [mac](http://github.techdecaf.io/cgen/latest/latest/darwin/cgen)
-- [linux](http://github.techdecaf.io/cgen/latest/latest/linux/cgen)
+- [windows](http://github.techdecaf.io/cgen/latest/windows/cgen.exe)
+- [mac](http://github.techdecaf.io/cgen/latest/darwin/cgen)
+- [linux](http://github.techdecaf.io/cgen/latest/linux/cgen)
 
 To install cgen, use the provided script, simlink it or place it in any directory that is part of your path.
 i.e. `/usr/local/bin` or `c:\windows`

@@ -8,9 +8,9 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.We
 
 Download Links
 
-- [windows]({{.DOWNLOAD_URI}}/latest/windows/{{.CI_PROJECT_NAME}}.exe)
-- [mac]({{.DOWNLOAD_URI}}/latest/darwin/{{.CI_PROJECT_NAME}})
-- [linux]({{.DOWNLOAD_URI}}/latest/linux/{{.CI_PROJECT_NAME}})
+- [windows]({{.DOWNLOAD_URI}}/windows/{{.CI_PROJECT_NAME}}.exe)
+- [mac]({{.DOWNLOAD_URI}}/darwin/{{.CI_PROJECT_NAME}})
+- [linux]({{.DOWNLOAD_URI}}/linux/{{.CI_PROJECT_NAME}})
 
 To install {{.CI_PROJECT_NAME}}, use the provided script, simlink it or place it in any directory that is part of your path.
 i.e. `/usr/local/bin` or `c:\windows`
