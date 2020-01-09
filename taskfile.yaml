@@ -58,3 +58,7 @@ tasks:
   upgrade:
     description: upgrade project from cgen template
     commands: ["cgen upgrade"]
+
+  release:
+    description: bump version and release for deployment
+    commands: [cgen bump --push]
