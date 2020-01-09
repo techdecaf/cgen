@@ -18,6 +18,7 @@ test:
   stage: test
   script:
     - tasks run integration
+    - go run . install https://github.com/techdecaf/cgen-template.git
     - go run . list
     - go run . run build install
 
