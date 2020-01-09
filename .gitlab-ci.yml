@@ -18,7 +18,8 @@ test:
   stage: test
   script:
     - tasks run integration
-    - go run . install https://github.com/techdecaf/cgen-template
+    - go run . list
+    - go run . run build install
 
 deploy:
   image: techdecaf/ci:v1.3.0
@@ -26,5 +27,5 @@ deploy:
   script:
     - eval $(tasks run login --log false)
     - tasks run publish
-  only:
-    - master
+  only: [master]
+  except: { changes: ["*.md"] }

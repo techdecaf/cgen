@@ -168,6 +168,18 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	return nil
 }
 
+// Pull from remote repository
+func (gen *Generator) Pull() error {
+  Log.Info("pull", fmt.Sprintf("performing git pull in: %s", gen.Source))
+  GitPull := templates.CommandOptions{
+    Cmd:       "git pull",
+    Dir: gen.Source,
+		UseStdOut: true,
+	}
+  _, err := templates.Run(GitPull)
+  return err
+}
+
 // Exec run the generator
 func (gen *Generator) Exec() error {
 	if err := gen.Prompt(); err != nil {

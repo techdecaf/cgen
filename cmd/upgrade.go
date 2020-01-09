@@ -13,10 +13,14 @@ var upgradeCmd = &cobra.Command{
 	Long:  `this features is not currently supported pull request?`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var dest string
-		var expand bool
+		var expand, offline bool
 		var err error
 
 		if expand, err = cmd.Flags().GetBool("expand"); err != nil {
+			app.Log.Fatal("cmd_flags", err)
+    }
+
+		if offline, err = cmd.Flags().GetBool("offline"); err != nil {
 			app.Log.Fatal("cmd_flags", err)
 		}
 
@@ -41,6 +45,12 @@ var upgradeCmd = &cobra.Command{
 			app.Log.Fatal("generator_init", err)
 		}
 
+    if !offline {
+      if err := cgen.Generator.Pull(); err != nil {
+        app.Log.Fatal("generator_pull", err)
+      }
+    }
+
 		if err := cgen.Generator.Exec(); err != nil {
 			app.Log.Fatal("generator_exec", err)
 		}
@@ -59,5 +69,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	upgradeCmd.Flags().BoolP("expand", "e", false, "expand template files in addition to upgrading static files.")
+	upgradeCmd.Flags().Bool("offline", false, "do not perform a git pull before upgrading.")
 	upgradeCmd.Flags().StringP("path", "p", pwd, "to a directory with files to upgrade.")
 }
