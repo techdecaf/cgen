@@ -26,7 +26,7 @@ deploy:
   image: techdecaf/ci:v1.3.0
   stage: deploy
   script:
-    - eval $(tasks run login --log false)
+    - eval $(tasks run login -s)
     - tasks run build publish
   only: [master]
   except: { changes: ["*.md"] }
