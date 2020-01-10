@@ -30,4 +30,4 @@ deploy:
     - tasks run build publish
   only: [tags]
   except: [branches]
-  except: { changes: ["*.md"] }
+  # except: { changes: ["*.md"] }
