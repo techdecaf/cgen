@@ -28,5 +28,6 @@ deploy:
   script:
     - eval $(tasks run login -s)
     - tasks run build publish
-  only: [master]
+  only: [tags]
+  except: [branches]
   except: { changes: ["*.md"] }
