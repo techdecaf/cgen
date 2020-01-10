@@ -1,6 +1,6 @@
 # FULL DOCUMENTATION CAN BE FOUND HERE: #https://docs.gitlab.com/ce/ci/yaml/
 
-# image: golang:1.13-alpine
+image: golang:1.13-alpine
 
 # This folder is cached between builds
 # http://docs.gitlab.com/ce/ci/yaml/README.html#cache
@@ -14,7 +14,6 @@ before_script:
 stages: [test, deploy]
 
 test:
-  image: golang:1.13-alpine
   stage: test
   script:
     - tasks run integration
@@ -23,7 +22,6 @@ test:
     - go run . list
 
 deploy:
-  image: techdecaf/ci:v1.3.0
   stage: deploy
   script:
     - eval $(tasks run login -s)
