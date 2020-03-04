@@ -73,7 +73,7 @@ This project is designed to be a cross platform plugin-based project generator. 
 cgen :heart_eyes: plugins, but it does not use package management, instead you can just reference any git repository that you have access to.
 
 ```bash
-cgen -install https://github.com/techdecaf/cgen-template
+cgen install https://github.com/techdecaf/cgen-template
 ```
 
 ### Creating Your own Template Plugin
