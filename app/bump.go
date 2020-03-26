@@ -78,7 +78,7 @@ func Bump(params BumpParams) (version string, err error) {
 
 	// push
 	GitPush := templates.CommandOptions{
-		Cmd:       "git push --tags",
+		Cmd:       "git push --follow-tags",
 		UseStdOut: true,
 	}
 
