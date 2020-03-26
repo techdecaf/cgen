@@ -42,6 +42,7 @@ type Config struct {
 	From      string      `yaml:"from"`
 	Questions []*Question `yaml:"questions"`
 	RunAfter  []string    `yaml:"run_after"`
+	RunBefore  []string    `yaml:"run_before"`
 }
 
 // Generator struct
@@ -186,6 +187,13 @@ func (gen *Generator) Exec() error {
 		return err
 	}
 
+  if !gen.Options.PerformUpgrade {
+		// run scripts in config.run_after array.
+		if err := gen.RunBefore(); err != nil {
+			return err
+		}
+  }
+
 	if err := filepath.Walk(gen.TemplateFiles, gen.WalkFiles); err != nil {
 		return err
 	}
@@ -236,6 +244,7 @@ func (gen *Generator) Copy(src, dst string) error {
 
 type AppConfigProperties map[string]string
 
+// ReadPropertiesFile reads props
 func ReadPropertiesFile(filename string) (AppConfigProperties, error) {
 	config := AppConfigProperties{}
 
@@ -471,6 +480,30 @@ func (gen *Generator) RunAfter() (err error) {
 		}
 
 		Log.Info("run_after", command)
+
+		Command := templates.CommandOptions{
+			Cmd:       command,
+			Dir:       gen.Destination,
+			UseStdOut: true,
+		}
+
+		if _, err := templates.Run(Command); err != nil {
+			return err
+		}
+	}
+	return err
+}
+
+// RunAfter runs all commands found in config.yaml run_after prop.
+func (gen *Generator) RunBefore() (err error) {
+	for _, cmd := range gen.Config.RunBefore {
+		var command string
+
+		if command, err = templates.Expand(cmd, gen.TemplateHelpers); err != nil {
+			return err
+		}
+
+		Log.Info("run_before", command)
 
 		Command := templates.CommandOptions{
 			Cmd:       command,
