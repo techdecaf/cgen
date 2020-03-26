@@ -30,7 +30,7 @@ tasks:
 
   clean:
     description: removes all files listed in .gitignore
-    commands: ["rm -rf dist"]
+    commands: ["rm -rf dist temp"]
 
   install:
     description: installs locally to /usr/local/bin
@@ -54,6 +54,17 @@ tasks:
     commands:
       # expand the file, and pipe to write, if no errors default to the string "success"
       - "echo {{ExpandFile `docs/README.md` | WriteFile `README.md` | default `docs updated`}}"
+
+  test:
+    description: run tests
+    pre: [clean]
+    variables:
+      Name: cgen_test
+    commands:
+      - go run . help
+      - go run . install https://github.com/techdecaf/cgen-template.git
+      - go run . -t cgen-template -p temp
+      - go run . list
 
   upgrade:
     description: upgrade project from cgen template

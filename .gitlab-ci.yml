@@ -16,10 +16,7 @@ stages: [test, deploy]
 test:
   stage: test
   script:
-    - tasks run integration
-    - go run . help
-    - go run . install https://github.com/techdecaf/cgen-template.git
-    - go run . list
+    - tasks run test
 
 deploy:
   stage: deploy

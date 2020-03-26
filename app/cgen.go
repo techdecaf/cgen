@@ -59,7 +59,7 @@ func (app *CGen) Install(url string) (out string, err error) {
 		UseStdOut: true,
 	}
 
-  if _, err := os.Stat(app.BaseDir); os.IsNotExist(err) {
+  if _, err := os.Stat(dir); os.IsNotExist(err) {
 		GitCommand.Cmd = fmt.Sprintf("git clone '%s' '%s'", url, dir)
 	} else {
     GitCommand.Cmd = fmt.Sprintf("cd '%s' && git pull", dir)
