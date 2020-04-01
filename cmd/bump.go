@@ -71,6 +71,6 @@ func init() {
 	// bumpCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	bumpCmd.Flags().StringP("level", "l", "patch", "accepts (major, minor, patch or pre-release); defaults to `patch`")
 	bumpCmd.Flags().StringP("pattern", "p", "v%s", "use a custom pattern for the git tag, %s will be replaced with the version number, v%s => v1.0.2")
-	bumpCmd.Flags().Bool("push", false, "dry run only, do not run git tag")
+	bumpCmd.Flags().Bool("push", false, "runs git push --follow-tags after version increment")
 	bumpCmd.Flags().BoolP("dry-run", "d", false, "dry run only, do not run git tag")
 }
