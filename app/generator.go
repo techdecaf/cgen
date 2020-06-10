@@ -38,7 +38,8 @@ type Question struct {
 
 // Config - the config.yaml
 type Config struct {
-	Version   string      `yaml:"version"`
+  Version   string      `yaml:"version"`
+  Extends   string      `yaml:"extends"`
 	From      string      `yaml:"from"`
 	Questions []*Question `yaml:"questions"`
 	RunAfter  []string    `yaml:"run_after"`
@@ -92,11 +93,11 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	if gen.Options.PerformUpgrade || gen.Options.PromoteFile {
 
 		if gen.Options.PerformUpgrade {
-			Log.Info("init", "running in Upgrade mode")
+			Log.Info("init", "running in upgrade mode")
 		}
 
 		if gen.Options.PromoteFile {
-			Log.Info("init", "running in PromoteFile mode")
+			Log.Info("init", "running in promote mode")
 		}
 		// ensure answer file exists
 		if _, err := os.Stat(answerFile); err != nil {
@@ -112,7 +113,12 @@ func (gen *Generator) Init(params GeneratorParams) error {
 		byteValue, _ := ioutil.ReadAll(answersYAML)
 		yaml.Unmarshal(byteValue, &update)
 
-		gen.TemplateName = update.Template
+    // check to see if an tempate name was explicitly defined, else default to the .cgen answer file.
+    if params.Tempate != "" {
+      gen.TemplateName = params.Tempate
+    } else if update.Template != "" {
+      gen.TemplateName = update.Template
+    }
 
 		for k, v := range update.Answers {
 			gen.AppendAnswer(k, fmt.Sprintf("%v", v))
@@ -169,23 +175,67 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	return nil
 }
 
-// Pull from remote repository
-func (gen *Generator) Pull() error {
-  Log.Info("pull", fmt.Sprintf("performing git pull in: %s", gen.Source))
-  GitPull := templates.CommandOptions{
-    Cmd:       "git pull",
-    Dir: gen.Source,
-		UseStdOut: true,
-	}
-  _, err := templates.Run(GitPull)
-  return err
+// Extends checks to see if this template extends another template and generates that first.
+func (gen *Generator) Extends() error {
+  var super = &CGen{}
+
+  Log.Info("extends", gen.Config.Extends)
+
+  // check to see if we need to initialize a super template
+  if gen.Config.Extends == "" {
+    Log.Info("extends", "this generator does not extend anything, skipping")
+    return nil
+  }
+
+  // parse template name from git URL
+  regex := regexp.MustCompile(`.*\/(.*).git`)
+  matches := regex.FindStringSubmatch(gen.Config.Extends)
+  if len(matches) != 2 {
+    Log.Fatal(fmt.Sprintf("failed to identify template name from extends: %s", gen.Config.Extends), nil)
+  }
+  templateName := matches[1]
+  Log.Info("extends", fmt.Sprintf("running super for %s", templateName))
+
+  // install super generator
+  if err := super.Init(); err != nil {
+    Log.Fatal("super.Init() failed", err)
+  }
+
+  if _, err := super.Install(gen.Config.Extends); err != nil {
+    Log.Fatal("super.Install failed", err)
+  }
+
+   // generate super template
+    superParams := GeneratorParams{
+			Name:           gen.Name,                   // name of this project
+			TemplatesDir:   gen.TemplatesDir,           // directory of all cgen templates
+			Tempate:        templateName,                // selected cgen template parsed from the git URL
+			Destination:    gen.Destination,            // destination directory for generated files
+			PerformUpgrade: gen.Options.PerformUpgrade, // perform upgrade
+			StaticOnly:     gen.Options.StaticOnly,     // only copy static files, no template interpolation
+			Verbose:        gen.Options.Verbose,        // use verbose logging
+    }
+
+		if err := super.Generator.Init(superParams); err != nil {
+      Log.Fatal("super_generator_init", err)
+		}
+
+		if err := super.Generator.Exec(); err != nil {
+			Log.Fatal("super_generator_exec", err)
+		}
+
+  return nil
 }
 
 // Exec run the generator
 func (gen *Generator) Exec() error {
 	if err := gen.Prompt(); err != nil {
 		return err
-	}
+  }
+
+  if err := gen.Extends(); err != nil {
+		return err
+  }
 
   if !gen.Options.PerformUpgrade {
 		// run scripts in config.run_after array.
@@ -212,6 +262,20 @@ func (gen *Generator) Exec() error {
 	}
 	return err
 }
+
+// Pull from remote repository
+func (gen *Generator) Pull() error {
+  Log.Info("pull", fmt.Sprintf("performing git pull in: %s", gen.Source))
+  GitPull := templates.CommandOptions{
+    Cmd:       "git pull",
+    Dir: gen.Source,
+		UseStdOut: true,
+	}
+  _, err := templates.Run(GitPull)
+  return err
+}
+
+
 
 // Copy from src to dest
 func (gen *Generator) Copy(src, dst string) error {
