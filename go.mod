@@ -6,8 +6,10 @@ require (
 	github.com/alecthomas/gometalinter v2.0.11+incompatible
 	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf
 	github.com/blang/semver v3.5.1+incompatible
+	github.com/blang/semver/v4 v4.0.0
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/client9/misspell v0.3.4
+	github.com/franela/goblin v0.0.0-20200722185118-cb67619f1d10
 	github.com/golang/lint v0.0.0-20181026193005-c67002cb31c3
 	github.com/google/shlex v0.0.0-20181106134648-c34317bd91bf
 	github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc

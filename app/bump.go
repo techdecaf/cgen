@@ -1,11 +1,12 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 
-	"github.com/blang/semver"
+	"github.com/blang/semver/v4"
 	"github.com/techdecaf/templates"
 )
 
@@ -15,6 +16,52 @@ type BumpParams struct {
 	Pattern string
 	DryRun  bool
 	GitPush bool
+}
+
+// VersionIncrement major, minor, patch, pre
+type VersionIncrement string
+const(
+  major = "major"
+  minor = "minor"
+  patch = "patch"
+  pre = "pre"
+)
+
+// IsValid - Version Increment
+func (increment VersionIncrement) IsValid() error {
+    switch increment {
+    case major, minor, patch, pre:
+        return nil
+    }
+    return errors.New("Invalid leave type")
+}
+
+// Bump the incoming version by version increment
+func (increment VersionIncrement) Bump(version string)(incremented string, err error){
+  var v semver.Version
+
+  // ensure valid version increment
+  if err = increment.IsValid(); err != nil{
+    return "", err
+  }
+
+  // get semver
+  if v, err = semver.Parse(version); err != nil {
+    return "", err
+  }
+
+  switch increment {
+	case major:
+		v.IncrementMajor()
+	case minor:
+		v.IncrementMinor()
+	case patch:
+    v.IncrementPatch()
+  case pre:
+	default:
+		return "", fmt.Errorf("failed to increment version (%s) by increment (%s)", version, increment)
+	}
+  return v.String(), nil
 }
 
 // Bump bump project versions
