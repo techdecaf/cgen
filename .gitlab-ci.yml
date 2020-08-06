@@ -8,7 +8,7 @@ cache:
   paths: [$CI_PROJECT_DIR/dist]
 
 before_script:
-  - apk add git curl
+  # - apk add git curl
   - sh -c "$(curl -fsSL https://raw.github.com/techdecaf/tasks/master/install.sh)"
   - eval $(tasks run login -s)
 
