@@ -16,7 +16,7 @@ stages: [test, upload, publish]
 
 test:
   stage: test
-  script: [tasks run coverage test]
+  script: [tasks run coverage test build]
   coverage: /All files\s*\|\s*([\d\.]+)/
   artifacts:
     paths: [build/]
