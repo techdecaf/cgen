@@ -26,14 +26,14 @@ test:
 
 upload:
   stage: upload
-  image: docker pull techdecaf/ci:latest
+  image: techdecaf/ci:latest
   script: [tasks run upload]
   only: [/^v\d+.\d+.\d+/]
   except: [branches]
 
 publish:
   stage: publish
-  image: docker pull techdecaf/ci:latest
+  image: techdecaf/ci:latest
   script: [tasks run publish]
   only: [/^v\d+.\d+.\d+$/]
   except: [branches]
