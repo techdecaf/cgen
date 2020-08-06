@@ -17,6 +17,7 @@ stages: [test, upload, publish]
 test:
   stage: test
   script: [tasks run coverage test]
+  coverage: /All files\s*\|\s*([\d\.]+)/
   artifacts:
     paths: [build/]
     expire_in: 1 week
