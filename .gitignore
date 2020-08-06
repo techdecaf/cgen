@@ -1,2 +1,59 @@
-dist
+# this file is managed by a cgen template (golang-core)
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# ide
+.idea
+.vscode/*
+
+# mac os specific files
+.DS_Store
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+.npmrc
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules
+jspm_packages
+
+# Optional npm cache directory
+.npm
+
+# eslint cache
+.eslintcache
+
+# build files
 temp
+build
+.build
+.serverless
+junit.xml
+.webpack
+
+# private
+.private
+.secure
+.env*
+
+# exceptions
+!.vscode/launch.json
+!.vscode/servers.json
