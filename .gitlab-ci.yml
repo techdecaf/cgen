@@ -11,18 +11,28 @@ before_script:
   - apk add git curl
   - sh -c "$(curl -fsSL https://raw.github.com/techdecaf/tasks/master/install.sh)"
 
-stages: [test, deploy]
+stages: [test, build, deploy]
 
 test:
   stage: test
-  script:
-    - tasks run test
+  script: [tasks run test]
+  only: [branches, tags]
+  except: [master]
+
+build:
+  stage: build
+  script: [tasks run build]
+  artifacts:
+    paths: [build/]
+    expire_in: 1 week
+  only: [/^v\d+.\d+.\d+/]
+  except: [branches]
 
 deploy:
   stage: deploy
   script:
     - eval $(tasks run login -s)
-    - tasks run build publish
-  only: [tags]
+    - tasks run publish
+  only: [/^v\d+.\d+.\d+$/]
   except: [branches]
   # except: { changes: ["*.md"] }
