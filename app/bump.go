@@ -1,11 +1,11 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 
-	"github.com/blang/semver"
 	"github.com/techdecaf/templates"
 )
 
@@ -18,52 +18,29 @@ type BumpParams struct {
 }
 
 // Bump bump project versions
-func Bump(params BumpParams) (version string, err error) {
-	reEx := regexp.MustCompile(`(\d+\.\d+\.\d+)`)
-	place := strings.ToLower(strings.TrimSpace(params.Place))
-	pattern := params.Pattern
+func Bump(bump BumpParams) (version string, err error) {
+	place := strings.ToLower(strings.TrimSpace(bump.Place))
+	pattern := bump.Pattern
 
-	GitDescribeTags := templates.CommandOptions{
-		Cmd:        "git describe --tags --always --dirty --abbrev=0",
-		UseStdOut:  false,
-		TrimOutput: false,
-	}
+  // check for uncommitted changes
+  // if err := bump.checkForUncommittedChanges(); err != nil {
+  //   return "", err
+  // }
 
-	out, err := templates.Run(GitDescribeTags)
-	if err != nil {
-		return out, err
-	}
+  // find the current version
+  currentVersion, err := bump.getCurrentVersion()
+  if err != nil {
+    return "", err
+  }
 
-	version = strings.TrimSpace(string(out))
-
-	// check to make sure git repository is not dirty before performing a bump
-	//TODO: catch git with no commit history
-	if strings.Contains(version, "dirty") {
-		return "", fmt.Errorf("uncommitted changes: please stash or commit the current changes before bumping the version")
-	}
-
-	v, _ := semver.Make(reEx.FindString(version))
-
-	switch place {
-	case "major":
-		v.Major++
-		v.Minor = 0
-		v.Patch = 0
-	case "minor":
-		v.Minor++
-		v.Patch = 0
-	case "patch":
-		v.Patch++
-	default:
-		v.Pre[0], err = semver.NewPRVersion(place)
-	}
+  v, err := VersionIncrement(bump.Place).Bump(currentVersion)
 
 	// format tag according to the pattern
-	tag := fmt.Sprintf(pattern, v.String())
-	msg := fmt.Sprintf("cgen bump -l %s", place)
+	tag := fmt.Sprintf(pattern, v)
+	msg := fmt.Sprintf("incrementing %s version", place)
 	cmd := fmt.Sprintf("git tag -a %s -m '%s'", tag, msg)
 
-	if params.DryRun {
+	if bump.DryRun {
 		return tag, err
 	}
 
@@ -82,11 +59,56 @@ func Bump(params BumpParams) (version string, err error) {
 		UseStdOut: true,
 	}
 
-	if params.GitPush {
+	if bump.GitPush {
 		if out, err := templates.Run(GitPush); err != nil {
 			return out, err
 		}
 	}
 
 	return tag, err
+}
+
+func (bump BumpParams) getCurrentVersion() (version string, err error) {
+	reEx := regexp.MustCompile(`(\d+\.\d+\.\d+)(-\d+)?`)
+
+  // get most recent git tag by tagger date
+  gitTags := templates.CommandOptions{
+		Cmd:        "git tag --sort=taggerdate",
+		UseStdOut:  false,
+		TrimOutput: false,
+  }
+
+  gitTagsOut, err := templates.Run(gitTags)
+  if err !=nil {
+    return "", err
+  }
+
+  tags := strings.Split(strings.TrimSpace(gitTagsOut), "\n")
+
+  // parse the semver out of a string ignoring prefixes like `v0.2.3` or `version_0.2.6-rc.4`
+  version = reEx.FindString(tags[len(tags)-1])
+  // if no curent version is found, default to 0.0.0
+  if version == "" {
+    return "0.0.0", nil
+  }
+
+  return version, nil
+}
+
+func (bump BumpParams) checkForUncommittedChanges() (err error) {
+  gitDescribe := templates.CommandOptions{
+		Cmd:        "git describe --all --dirty --abbrev=0",
+		UseStdOut:  false,
+		TrimOutput: false,
+	}
+
+	gitDescribeOut, err := templates.Run(gitDescribe)
+	if err != nil {
+		return err
+  }
+  if strings.Contains(gitDescribeOut, "dirty") {
+    return errors.New("uncommitted changes: please stash or commit the current changes before bumping the version")
+  }
+
+  return nil
 }

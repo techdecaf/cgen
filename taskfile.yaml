@@ -24,25 +24,25 @@ tasks:
     variables:
       flags: build -ldflags "-X main.VERSION={{.CI_COMMIT_TAG}}"
     commands:
-      - GOOS=darwin go {{.flags}} -o dist/darwin/{{.CI_PROJECT_NAME}} -v
-      - GOOS=linux go {{.flags}} -o dist/linux/{{.CI_PROJECT_NAME}} -v
-      - GOOS=windows go {{.flags}} -o dist/windows/{{.CI_PROJECT_NAME}}.exe -v
+      - GOOS=darwin go {{.flags}} -o build/darwin/{{.CI_PROJECT_NAME}} -v
+      - GOOS=linux go {{.flags}} -o build/linux/{{.CI_PROJECT_NAME}} -v
+      - GOOS=windows go {{.flags}} -o build/windows/{{.CI_PROJECT_NAME}}.exe -v
 
   clean:
     description: removes all files listed in .gitignore
-    commands: ["rm -rf dist temp"]
+    commands: ["rm -rf build temp"]
 
   install:
     description: installs locally to /usr/local/bin
     commands:
-      - "chmod +x dist/{{OS}}/{{.CI_PROJECT_NAME}}"
-      - "cp dist/{{OS}}/{{.CI_PROJECT_NAME}} /usr/local/bin"
+      - "chmod +x build/{{OS}}/{{.CI_PROJECT_NAME}}"
+      - "cp build/{{OS}}/{{.CI_PROJECT_NAME}} /usr/local/bin"
 
   publish:
     description: moves compiled files to /usr/local/bin/
     commands:
-      - "aws s3 sync dist s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/{{.CI_COMMIT_TAG}}"
-      - "aws s3 sync dist s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/latest"
+      - "aws s3 sync build s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/{{.CI_COMMIT_TAG}}"
+      - "aws s3 sync build s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/latest"
 
   login:
     description: checkout temporary aws access keys
@@ -70,6 +70,33 @@ tasks:
     description: upgrade project from cgen template
     commands: ["cgen upgrade"]
 
-  release:
-    description: bump version and release for deployment
-    commands: [cgen bump --push]
+  coverage:
+    description: run test coverage
+    commands:
+      - "go test ./app -coverprofile coverage.out && go tool cover -func=coverage.out"
+
+  pre-release:
+    description: bump patch version and release for deployment
+    commands:
+      - cgen bump --level pre-release
+      - git push --follow-tags --no-verify
+
+  release-patch:
+    description: bump patch version and release for deployment
+    commands:
+      - cgen bump --level patch
+      - git push --follow-tags --no-verify
+
+  release-minor:
+    description: bump minor version and release for deployment
+    commands:
+      - cgen bump --level minor
+      - git push --follow-tags --no-verify
+
+  upgrade:
+    description: upgrade the current project
+    commands: [cgen upgrade, yarn upgrade --latest]
+
+  oops:
+    description: undo last commit
+    commands: [git reset HEAD~1]
