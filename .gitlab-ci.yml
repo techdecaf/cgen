@@ -21,7 +21,7 @@ test:
 
 build:
   stage: build
-  script: [tasks run build]
+  script: [tasks run build upload]
   artifacts:
     paths: [build/]
     expire_in: 1 week
@@ -32,6 +32,6 @@ deploy:
   stage: deploy
   script:
     - eval $(tasks run login -s)
-    - tasks run publish
+    - tasks run publish latest
   only: [/^v\d+.\d+.\d+$/]
   except: [branches]

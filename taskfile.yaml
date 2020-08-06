@@ -38,11 +38,13 @@ tasks:
       - "chmod +x build/{{OS}}/{{.CI_PROJECT_NAME}}"
       - "cp build/{{OS}}/{{.CI_PROJECT_NAME}} /usr/local/bin"
 
-  publish:
+  upload:
     description: moves compiled files to /usr/local/bin/
-    commands:
-      - "aws s3 sync build s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/{{.CI_COMMIT_TAG}}"
-      - "aws s3 sync build s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/latest"
+    commands: ["aws s3 sync build s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/{{.CI_COMMIT_TAG}}"]
+
+  publish:
+    description: publish new stable version under the `latest` tag
+    commands: ["aws s3 sync build s3://{{.S3_BUCKET}}/{{.CI_PROJECT_NAME}}/latest"]
 
   login:
     description: checkout temporary aws access keys
