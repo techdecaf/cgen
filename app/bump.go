@@ -34,6 +34,9 @@ func Bump(bump BumpParams) (version string, err error) {
   }
 
   v, err := VersionIncrement(bump.Place).Bump(currentVersion)
+  if err != nil {
+    return "", err
+  }
 
 	// format tag according to the pattern
 	tag := fmt.Sprintf(pattern, v)

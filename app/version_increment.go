@@ -2,7 +2,6 @@ package app
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/blang/semver/v4"
@@ -55,7 +54,6 @@ func (increment VersionIncrement) Bump(version string)(incremented string, err e
       preRelease = append(preRelease, newPre)
     }
 	default:
-		return "", fmt.Errorf("failed to increment version (%s) by increment (%s)", version, increment)
   }
 
   // set the pre-release version
