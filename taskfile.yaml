@@ -80,7 +80,7 @@ tasks:
   pre-release:
     description: bump patch version and release for deployment
     commands:
-      - cgen bump --level pre
+      - cgen bump --level pre-release
       - git push --follow-tags --no-verify
 
   release-patch:

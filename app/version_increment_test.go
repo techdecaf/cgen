@@ -88,7 +88,7 @@ func TestBump(t *testing.T){
       })
 
       test.It("then: it increments the pre-release version", func(){
-        increment := VersionIncrement("pre")
+        increment := VersionIncrement("pre-release")
         version, err := increment.Bump("0.0.1")
 
         if err != nil {
