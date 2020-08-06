@@ -35,4 +35,3 @@ deploy:
     - tasks run publish
   only: [/^v\d+.\d+.\d+$/]
   except: [branches]
-  # except: { changes: ["*.md"] }
