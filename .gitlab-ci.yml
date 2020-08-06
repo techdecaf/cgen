@@ -1,6 +1,6 @@
 # FULL DOCUMENTATION CAN BE FOUND HERE: #https://docs.gitlab.com/ce/ci/yaml/
 
-image: golang:1.13-alpine
+image: golang:1.13-stretch
 
 # This folder is cached between builds
 # http://docs.gitlab.com/ce/ci/yaml/README.html#cache
