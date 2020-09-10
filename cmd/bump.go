@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/techdecaf/cgen/app"
+	app "github.com/techdecaf/cgen/internal"
 )
 
 // bumpCmd represents the bump command

@@ -6,7 +6,8 @@ import (
 	"path"
 
 	"github.com/spf13/cobra"
-	"github.com/techdecaf/cgen/app"
+
+	app "github.com/techdecaf/cgen/internal"
 	"github.com/techdecaf/utils"
 )
 

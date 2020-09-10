@@ -36,11 +36,11 @@ type Question struct {
 	Options []string `yaml:"options,omitempty"`
 }
 
-// Config - the config.yaml
-type Config struct {
+// TemplateConfig - the config.yaml
+type TemplateConfig struct {
   Version   string      `yaml:"version"`
   Extends   string      `yaml:"extends"`
-	From      string      `yaml:"from"`
+  Variables   yaml.MapSlice `yaml:"variables"`
 	Questions []*Question `yaml:"questions"`
 	RunAfter  []string    `yaml:"run_after"`
 	RunBefore  []string    `yaml:"run_before"`
@@ -58,7 +58,7 @@ type Generator struct {
 	TemplatesDir    string `json:"TemplatesDir"`
 	TemplateHelpers templates.Functions
 	Variables       templates.Variables
-	Config          *Config                `json:"Config"`
+	Config          *TemplateConfig                `json:"Config"`
 	Answers         map[string]interface{} `json:"Answers"`
 	Options         struct {
 		StaticOnly     bool `json:"StaticOnly"`
@@ -141,7 +141,7 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	gen.QuestionsFile = filepath.Join(gen.Source, "config.yaml")
 	gen.TemplateFiles = filepath.Join(gen.Source, "template")
 
-	gen.Config = &Config{}
+	gen.Config = &TemplateConfig{}
 	gen.Variables.Init()
 	gen.TemplateHelpers = gen.LoadHelpers()
 
@@ -188,12 +188,12 @@ func (gen *Generator) Extends() error {
   }
 
   // parse template name from git URL
-  regex := regexp.MustCompile(`.*\/(.*).git`)
+  regex := regexp.MustCompile(`.*\/(.*)$`)
   matches := regex.FindStringSubmatch(gen.Config.Extends)
   if len(matches) != 2 {
     Log.Fatal(fmt.Sprintf("failed to identify template name from extends: %s", gen.Config.Extends), nil)
   }
-  templateName := matches[1]
+  templateName := strings.ReplaceAll(matches[1], `.git`, "")
   Log.Info("extends", fmt.Sprintf("running super for %s", templateName))
 
   // install super generator
