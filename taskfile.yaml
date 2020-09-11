@@ -3,7 +3,7 @@ options:
 
 variables:
   CI_PROJECT_NAME: "{{EXEC `echo ${PWD##*/}`}}"
-  CI_COMMIT_TAG: "{{TRY `git describe --tags --always --dirty --abbrev=0`}}"
+  CI_COMMIT_TAG: "{{TRY `git describe --tags --always --abbrev=0`}}"
   CI_COMMIT_REF_NAME: "{{TRY `git rev-parse --abbrev-ref HEAD`}}"
   CI_COMMIT_SHA: "{{TRY `git rev-parse HEAD`}}"
   S3_BUCKET: github.techdecaf.io

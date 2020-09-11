@@ -38,12 +38,13 @@ type Question struct {
 
 // TemplateConfig - the config.yaml
 type TemplateConfig struct {
-  Version   string      `yaml:"version"`
-  Extends   string      `yaml:"extends"`
-  Variables   yaml.MapSlice `yaml:"variables"`
-	Questions []*Question `yaml:"questions"`
-	RunAfter  []string    `yaml:"run_after"`
-	RunBefore  []string    `yaml:"run_before"`
+  CgenVersion     string        `yaml:"cgen_version"`
+  TemplateVersion string        `yaml:"template_version"`
+  Extends         string        `yaml:"extends"`
+  Variables       yaml.MapSlice `yaml:"variables"`
+	Questions       []*Question   `yaml:"questions"`
+	RunAfter        []string      `yaml:"run_after"`
+	RunBefore       []string      `yaml:"run_before"`
 }
 
 // Generator struct
@@ -58,7 +59,7 @@ type Generator struct {
 	TemplatesDir    string `json:"TemplatesDir"`
 	TemplateHelpers templates.Functions
 	Variables       templates.Variables
-	Config          *TemplateConfig                `json:"Config"`
+	Config          TemplateConfig                `json:"Config"`
 	Answers         map[string]interface{} `json:"Answers"`
 	Options         struct {
 		StaticOnly     bool `json:"StaticOnly"`
@@ -141,7 +142,7 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	gen.QuestionsFile = filepath.Join(gen.Source, "config.yaml")
 	gen.TemplateFiles = filepath.Join(gen.Source, "template")
 
-	gen.Config = &TemplateConfig{}
+	gen.Config = TemplateConfig{}
 	gen.Variables.Init()
 	gen.TemplateHelpers = gen.LoadHelpers()
 
@@ -163,7 +164,7 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	yaml.Unmarshal(byteValue, &gen.Config)
 
 	gen.AppendAnswer("Name", gen.Name)
-	gen.AppendAnswer("TemplateVersion", gen.Config.Version)
+	gen.AppendAnswer("TemplateVersion", gen.Config.TemplateVersion)
 	gen.AppendAnswer("Timestamp", time.Now().UTC().Format(time.RFC3339))
 
 	gen.Variables.Set(templates.Variable{

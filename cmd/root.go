@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
+	"github.com/blang/semver/v4"
 	"github.com/spf13/cobra"
 	app "github.com/techdecaf/cgen/internal"
 
@@ -61,7 +63,7 @@ var rootCmd = &cobra.Command{
 		// initialize a new instance of cgen
 		if err := cgen.Init(); err != nil {
 			app.Log.Fatal("cgen_init", err)
-		}
+    }
 
 		// list all available generators
 		generators, err := cgen.ListInstalled()
@@ -114,7 +116,32 @@ var rootCmd = &cobra.Command{
 
 		if err := cgen.Generator.Init(params); err != nil {
 			app.Log.Fatal("generator_init", err)
-		}
+    }
+
+    // if gen.Config.CgenVersion is newer than the current running version of cgen, prompt the user to upgrade.
+    // cgen.Generator.Config.CgenVersion
+    fmt.Println(cgen.Generator.Config.CgenVersion)
+    fmt.Println(cgen.Generator.Config.TemplateVersion)
+    if cgen.Generator.Config.CgenVersion != "" {
+      cgenVersion := strings.ReplaceAll(VERSION, "v", "")
+      requiredRange := cgen.Generator.Config.CgenVersion
+
+      if currentVersion, err := semver.Parse(cgenVersion); err != nil {
+        app.Log.Info("version_check", fmt.Sprintf("could not parse application version %s", cgenVersion))
+      } else {
+        if inTolerance, err := semver.ParseRange(requiredRange); err != nil {
+          app.Log.Fatal("tolerance_check", err)
+        } else {
+            fmt.Println(inTolerance(currentVersion))
+          if inTolerance(currentVersion) == false{
+            app.Log.Info("tolerance_check", fmt.Sprintf("this template requires cgen %s, you are currently running %s", requiredRange, currentVersion ))
+            app.Log.Info("tolerance_check", "upgrade instructions can be found here: https://github.com/techdecaf/cgen#download-and-install")
+            app.Log.Fatal("tolerance_check", "an upgrade to cgen is required to use this template")
+          }
+
+        }
+      }
+    }
 
 		if err := cgen.Generator.Exec(); err != nil {
 			app.Log.Fatal("generator_exec", err)
