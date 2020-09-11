@@ -84,7 +84,7 @@ var rootCmd = &cobra.Command{
 		here, err := utils.EnsureDir(dest)
 		if err != nil {
 			app.Log.Fatal("current_dir", err)
-		}
+    }
 
 		if name == "" {
 			name, err = cgen.Generator.Ask(app.Question{
@@ -119,27 +119,26 @@ var rootCmd = &cobra.Command{
     }
 
     // if gen.Config.CgenVersion is newer than the current running version of cgen, prompt the user to upgrade.
-    // cgen.Generator.Config.CgenVersion
-    fmt.Println(cgen.Generator.Config.CgenVersion)
-    fmt.Println(cgen.Generator.Config.TemplateVersion)
     if cgen.Generator.Config.CgenVersion != "" {
+      var err error
+      var currentVersion semver.Version
+      var inTolerance semver.Range
+
       cgenVersion := strings.ReplaceAll(VERSION, "v", "")
       requiredRange := cgen.Generator.Config.CgenVersion
 
-      if currentVersion, err := semver.Parse(cgenVersion); err != nil {
+      if currentVersion, err = semver.Parse(cgenVersion); err != nil {
         app.Log.Info("version_check", fmt.Sprintf("could not parse application version %s", cgenVersion))
-      } else {
-        if inTolerance, err := semver.ParseRange(requiredRange); err != nil {
-          app.Log.Fatal("tolerance_check", err)
-        } else {
-            fmt.Println(inTolerance(currentVersion))
-          if inTolerance(currentVersion) == false{
-            app.Log.Info("tolerance_check", fmt.Sprintf("this template requires cgen %s, you are currently running %s", requiredRange, currentVersion ))
-            app.Log.Info("tolerance_check", "upgrade instructions can be found here: https://github.com/techdecaf/cgen#download-and-install")
-            app.Log.Fatal("tolerance_check", "an upgrade to cgen is required to use this template")
-          }
+      }
 
-        }
+      if inTolerance, err = semver.ParseRange(requiredRange); err != nil {
+        app.Log.Fatal("tolerance_check", err)
+      }
+
+      if inTolerance(currentVersion) == false{
+        readmeUrl := "https://github.com/techdecaf/cgen#download-and-install"
+        message := fmt.Sprintf("this template requires cgen %s, you are currently running %s. Go here to upgrade: %s", requiredRange, currentVersion, readmeUrl )
+        app.Log.Fatal("tolerance_check", message)
       }
     }
 
@@ -177,7 +176,9 @@ func init() {
 
 	rootCmd.Flags().StringP("name", "n", "", "what do you want to call your newly generated project?")
 	rootCmd.Flags().StringP("template", "t", "", "specify a which template you would like to use.")
-	rootCmd.Flags().StringP("path", "p", pwd, "where you would like to generate your project.")
+  rootCmd.Flags().StringP("path", "p", pwd, "where you would like to generate your project.")
+
+  // rootCmd.MarkFlagRequired("path")
 }
 
 // initConfig reads in config file and ENV variables if set.
