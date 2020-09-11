@@ -63,9 +63,9 @@ tasks:
     variables:
       Name: cgen_test
     commands:
-      - go run . help
+      - go run  . help
       - go run . install https://github.com/techdecaf/cgen-template.git
-      - go run . -t cgen-template -p temp
+      - go run -ldflags "-X main.VERSION={{.CI_COMMIT_TAG}} . -t cgen-template -p temp
       - go run . list
 
   upgrade:
@@ -75,7 +75,7 @@ tasks:
   coverage:
     description: run test coverage
     commands:
-      - "go test ./app -coverprofile coverage.out && go tool cover -func=coverage.out"
+      - "go test ./internal -coverprofile coverage.out && go tool cover -func=coverage.out"
 
   pre-release:
     description: bump patch version and release for deployment
