@@ -1,5 +1,5 @@
 $APP_NAME = "cgen"
-$BUCKET_URL = "http://github.techdecaf.io"
+$BUCKET_URL = "https://s3-us-west-2.amazonaws.com/github.techdecaf.io"
 $INSTALL_PATH = "c:\windows"
 
 $APP_BINARY = "$INSTALL_PATH\$APP_NAME.exe"
