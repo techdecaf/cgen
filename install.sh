@@ -5,7 +5,7 @@ set -e
 
 # install variables
 export APP_NAME=cgen
-export BUCKET_URL=http://github.techdecaf.io
+export BUCKET_URL=https://s3-us-west-2.amazonaws.com/github.techdecaf.io
 export INSTALL_PATH=${INSTALL_PATH:-"/usr/local/bin"}
 export INSTALL_VERSION=${INSTALL_VERSION:-"latest"}
 
