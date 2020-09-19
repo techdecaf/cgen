@@ -18,7 +18,7 @@ func Confirm(msg string) {
 		Log.Fatal("confirmation_prompt", err)
 	}
 
-	if confirm == "false" {
+	if confirm != "true" {
 		os.Exit(0)
 	}
 }

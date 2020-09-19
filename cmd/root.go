@@ -100,7 +100,7 @@ var rootCmd = &cobra.Command{
 			app.Log.Fatal("ioutil.ReadDir", err)
 		} else {
 			if len(files) != 0 {
-				app.Confirm("the specified directory is not empty, do you want to continue?")
+				app.Confirm("the specified directory is not empty, do you want to continue")
 			}
 		}
 
