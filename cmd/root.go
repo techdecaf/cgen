@@ -105,10 +105,9 @@ var rootCmd = &cobra.Command{
 		}
 
 		params := app.GeneratorParams{
-			Name:           name,              // name of this project
-			TemplatesDir:   cgen.TemplatesDir, // directory of all cgen templates
-			Tempate:        template,          // selected cgen template
-			Destination:    dest,              // destination directory for generated files
+			ProjectName:           name,              // name of this project
+			TemplateName:        template,          // selected cgen template
+			ProjectDirectory:    dest,              // destination directory for generated files
 			PerformUpgrade: false,             // perform upgrade
 			StaticOnly:     false,             // only copy static files, no template interpolation
 			Verbose:        true,              // use verbose logging
@@ -119,13 +118,13 @@ var rootCmd = &cobra.Command{
     }
 
     // if gen.Config.CgenVersion is newer than the current running version of cgen, prompt the user to upgrade.
-    if cgen.Generator.Config.CgenVersion != "" {
+    if cgen.Generator.Template.CgenVersion != "" {
       var err error
       var currentVersion semver.Version
       var inTolerance semver.Range
 
       cgenVersion := strings.ReplaceAll(VERSION, "v", "")
-      requiredRange := cgen.Generator.Config.CgenVersion
+      requiredRange := cgen.Generator.Template.CgenVersion
 
       if currentVersion, err = semver.Parse(cgenVersion); err != nil {
         app.Log.Info("version_check", fmt.Sprintf("could not parse application version %s", cgenVersion))
@@ -135,9 +134,9 @@ var rootCmd = &cobra.Command{
         app.Log.Fatal("tolerance_check", err)
       }
 
-      if inTolerance(currentVersion) == false{
-        readmeUrl := "https://github.com/techdecaf/cgen#download-and-install"
-        message := fmt.Sprintf("this template requires cgen %s, you are currently running %s. Go here to upgrade: %s", requiredRange, currentVersion, readmeUrl )
+      if inTolerance(currentVersion) == false {
+        readmeURL := "https://github.com/techdecaf/cgen#download-and-install"
+        message := fmt.Sprintf("this template requires cgen %s, you are currently running %s. Go here to upgrade: %s", requiredRange, currentVersion, readmeURL )
         app.Log.Fatal("tolerance_check", message)
       }
     }

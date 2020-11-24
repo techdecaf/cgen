@@ -13,6 +13,12 @@ import (
 	"github.com/techdecaf/templates"
 )
 
+// ApplicationDirectory root directory of the cgen application
+var ApplicationDirectory string
+
+// TemplatesDirectory where all template generators are cached
+var TemplatesDirectory string
+
 // Log cgen logger
 var Log = golog.Log{
 	Name: "cgen",
@@ -32,10 +38,13 @@ func (app *CGen) Init() (err error) {
 	usr, err := user.Current()
 	if err != nil {
 		return err
-	}
+  }
+  ApplicationDirectory = filepath.Join(usr.HomeDir, ".cgen")
+  TemplatesDirectory = filepath.Join(ApplicationDirectory, "generators")
 
-	app.BaseDir = filepath.Join(usr.HomeDir, ".cgen")
-	app.TemplatesDir = filepath.Join(app.BaseDir, "generators")
+
+	app.BaseDir = ApplicationDirectory
+	app.TemplatesDir = TemplatesDirectory
 	app.Generator = Generator{}
 
 	if _, err := os.Stat(app.BaseDir); os.IsNotExist(err) {

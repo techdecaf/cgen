@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -12,20 +11,12 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/manifoldco/promptui"
 	"github.com/mholt/archiver/v3"
 	"github.com/techdecaf/templates"
 	"github.com/techdecaf/utils"
-	yaml "gopkg.in/yaml.v2"
 )
-
-// Output struct
-type Output struct {
-	Template string                 `yaml:"template"`
-	Answers  map[string]interface{} `yaml:"answers"`
-}
 
 // Question struct for questions file.
 type Question struct {
@@ -36,32 +27,12 @@ type Question struct {
 	Options []string `yaml:"options,omitempty"`
 }
 
-// TemplateConfig - the config.yaml
-type TemplateConfig struct {
-  CgenVersion     string        `yaml:"cgen_version"`
-  TemplateVersion string        `yaml:"template_version"`
-  Extends         string        `yaml:"extends"`
-  Variables       yaml.MapSlice `yaml:"variables"`
-	Questions       []*Question   `yaml:"questions"`
-	RunAfter        []string      `yaml:"run_after"`
-	RunBefore       []string      `yaml:"run_before"`
-}
-
 // Generator struct
 type Generator struct {
-	Name            string `json:"Name"`
-	Source          string `json:"Source"`
-	Destination     string `json:"Destination"`
-	QuestionsFile   string `json:"QuestionsFile"`
-	AnswersFile     string `json:"AnswersFile"`
-	TemplateFiles   string `json:"TemplateFiles"`
-	TemplateName    string `json:"TemplateName"`
-	TemplatesDir    string `json:"TemplatesDir"`
-	TemplateHelpers templates.Functions
-	Variables       templates.Variables
-	Config          TemplateConfig                `json:"Config"`
-	Answers         map[string]interface{} `json:"Answers"`
-	Options         struct {
+  Template         Template `json:"template"`
+  Project          Project `json:"template"`
+  Variables        templates.Variables
+	Options          struct {
 		StaticOnly     bool `json:"StaticOnly"`
 		PerformUpgrade bool `json:"PerformUpgrade"`
 		PromoteFile    bool `json:"PromoteFile"`
@@ -79,7 +50,7 @@ func (gen *Generator) Init(params GeneratorParams) error {
 
 	if gen.Options.Verbose {
 		params.toJSON()
-	}
+  }
 
 	// variables applied in this order
 	// 1. cli options
@@ -90,7 +61,6 @@ func (gen *Generator) Init(params GeneratorParams) error {
 	// todo: validate inputs, that files exist etc
 	// default destination to current working directory or use project name
 	// check to see if an answers file exists in current dir
-	answerFile := filepath.Join(params.Destination, ".cgen.yaml")
 	if gen.Options.PerformUpgrade || gen.Options.PromoteFile {
 
 		if gen.Options.PerformUpgrade {
@@ -99,79 +69,79 @@ func (gen *Generator) Init(params GeneratorParams) error {
 
 		if gen.Options.PromoteFile {
 			Log.Info("init", "running in promote mode")
-		}
-		// ensure answer file exists
-		if _, err := os.Stat(answerFile); err != nil {
-			return err
-		}
-		update := Output{}
-
-		answersYAML, err := os.Open(answerFile)
-		if err != nil {
-			return err
-		}
-		defer answersYAML.Close()
-		byteValue, _ := ioutil.ReadAll(answersYAML)
-		yaml.Unmarshal(byteValue, &update)
-
-    // check to see if an tempate name was explicitly defined, else default to the .cgen answer file.
-    if params.Tempate != "" {
-      gen.TemplateName = params.Tempate
-    } else if update.Template != "" {
-      gen.TemplateName = update.Template
     }
 
-		for k, v := range update.Answers {
+    gen.Project = Project{
+      Directory: params.ProjectDirectory,
+    }
+
+    // Initialize project
+    if err := gen.Project.Init(); err != nil {
+      return err
+    }
+    gen.Project.toJSON()
+
+
+    // check to see if an tempate name was explicitly defined, else default to the .cgen answer file.
+    // this prevents looping when running an upgrade that extends another template.
+    if params.TemplateName == "" {
+      params.TemplateName = gen.Project.State.Template
+    }
+    gen.Template = Template{
+      Name: params.TemplateName,
+    }
+
+    // Initialize template
+    if err := gen.Template.Init(); err != nil {
+      return err
+    }
+    gen.Template.toJSON()
+
+		for k, v := range gen.Project.State.Answers {
 			gen.AppendAnswer(k, fmt.Sprintf("%v", v))
 			// handle `Name` as a special case, and set params from answer file.
 			if k == "Name" {
-				params.Name = fmt.Sprintf("%v", v)
+				params.ProjectName = fmt.Sprintf("%v", v)
 			}
-		}
-	} else {
-		gen.TemplateName = params.Tempate
-	}
+    }
+    return nil
+  }
 
-	// path to generators
-	gen.Name = params.Name
-	gen.TemplatesDir = params.TemplatesDir
-	gen.Source = filepath.Join(gen.TemplatesDir, gen.TemplateName)
 
-	gen.Destination = params.Destination
-	gen.AnswersFile = filepath.Join(gen.Destination, ".cgen.yaml")
-	gen.QuestionsFile = filepath.Join(gen.Source, "config.yaml")
-	gen.TemplateFiles = filepath.Join(gen.Source, "template")
+  gen.Template = Template{
+    Name: params.TemplateName,
+  }
 
-	gen.Config = TemplateConfig{}
-	gen.Variables.Init()
-	gen.TemplateHelpers = gen.LoadHelpers()
+  // Initialize template
+  if err := gen.Template.Init(); err != nil {
+    return err
+  }
+  gen.Template.toJSON()
 
-	// check for required project structure
-	if _, err := os.Stat(gen.TemplateFiles); os.IsNotExist(err) {
-		return fmt.Errorf("%s does not have the required template directory, please check the README file", gen.Source)
-	}
+  gen.Project = Project{
+    Name: params.ProjectName,
+    Directory: params.ProjectDirectory,
+    State: ProjectState {
+      Template: gen.Template.Name,
+      Version: gen.Template.LatestStableVersion,
+    },
+  }
 
-	if _, err := os.Stat(gen.QuestionsFile); os.IsNotExist(err) {
-		log.Printf("%s does not have a questions.yaml file, so it may not actually be a cgen template...", gen.Source)
-	}
-
-	configYAML, err := os.Open(gen.QuestionsFile)
-	if err != nil {
+  // Initialize project
+  if err := gen.Project.Init(); err != nil {
 		return err
-	}
-	defer configYAML.Close()
-	byteValue, _ := ioutil.ReadAll(configYAML)
-	yaml.Unmarshal(byteValue, &gen.Config)
+  }
+  gen.Project.toJSON()
 
-	gen.AppendAnswer("Name", gen.Name)
-	gen.AppendAnswer("TemplateVersion", gen.Config.TemplateVersion)
-	gen.AppendAnswer("Timestamp", time.Now().UTC().Format(time.RFC3339))
+	gen.AppendAnswer("Name", gen.Project.Name)
+	// gen.AppendAnswer("TemplateVersion", gen.Template.TemplateVersion)
+  // gen.AppendAnswer("Timestamp", time.Now().UTC().Format(time.RFC3339))
 
-	gen.Variables.Set(templates.Variable{
+  gen.Project.variables.Set(templates.Variable{
 		Key:         "PWD",
-		Value:       gen.Destination,
+		Value:       gen.Project.Directory,
 		OverrideEnv: true,
-	})
+  })
 
 	return nil
 }
@@ -180,19 +150,19 @@ func (gen *Generator) Init(params GeneratorParams) error {
 func (gen *Generator) Extends() error {
   var super = &CGen{}
 
-  Log.Info("extends", gen.Config.Extends)
+  Log.Info("extends", gen.Template.Extends)
 
   // check to see if we need to initialize a super template
-  if gen.Config.Extends == "" {
+  if gen.Template.Extends == "" {
     Log.Info("extends", "this generator does not extend anything, skipping")
     return nil
   }
 
   // parse template name from git URL
   regex := regexp.MustCompile(`.*\/(.*)$`)
-  matches := regex.FindStringSubmatch(gen.Config.Extends)
+  matches := regex.FindStringSubmatch(gen.Template.Extends)
   if len(matches) != 2 {
-    Log.Fatal(fmt.Sprintf("failed to identify template name from extends: %s", gen.Config.Extends), nil)
+    Log.Fatal(fmt.Sprintf("failed to identify template name from extends: %s", gen.Template.Extends), nil)
   }
   templateName := strings.ReplaceAll(matches[1], `.git`, "")
   Log.Info("extends", fmt.Sprintf("running super for %s", templateName))
@@ -202,19 +172,18 @@ func (gen *Generator) Extends() error {
     Log.Fatal("super.Init() failed", err)
   }
 
-  if _, err := super.Install(gen.Config.Extends); err != nil {
+  if _, err := super.Install(gen.Template.Extends); err != nil {
     Log.Fatal("super.Install failed", err)
   }
 
    // generate super template
     superParams := GeneratorParams{
-			Name:           gen.Name,                   // name of this project
-			TemplatesDir:   gen.TemplatesDir,           // directory of all cgen templates
-			Tempate:        templateName,                // selected cgen template parsed from the git URL
-			Destination:    gen.Destination,            // destination directory for generated files
-			PerformUpgrade: gen.Options.PerformUpgrade, // perform upgrade
-			StaticOnly:     gen.Options.StaticOnly,     // only copy static files, no template interpolation
-			Verbose:        gen.Options.Verbose,        // use verbose logging
+			ProjectName:        gen.Project.Name,           // name of this projectTemplatesDirectory:   TemplatesDirectory,           // directory of all cgen templates
+			TemplateName:        templateName,               // selected cgen template parsed from the git URL
+			ProjectDirectory:   gen.Project.Directory,      // destination directory for generated files
+			PerformUpgrade:     gen.Options.PerformUpgrade, // perform upgrade
+			StaticOnly:         gen.Options.StaticOnly,     // only copy static files, no template interpolation
+			Verbose:            gen.Options.Verbose,        // use verbose logging
     }
 
 		if err := super.Generator.Init(superParams); err != nil {
@@ -229,7 +198,7 @@ func (gen *Generator) Extends() error {
 }
 
 // Exec run the generator
-func (gen *Generator) Exec() error {
+func (gen *Generator) Exec() (err error) {
 	if err := gen.Prompt(); err != nil {
 		return err
   }
@@ -245,15 +214,13 @@ func (gen *Generator) Exec() error {
 		}
   }
 
-	if err := filepath.Walk(gen.TemplateFiles, gen.WalkFiles); err != nil {
+	if err := filepath.Walk(gen.Template.Files, gen.WalkFiles); err != nil {
 		return err
 	}
 
-	// save output to projct_root/.cgen.yaml
-	ans, err := gen.Save()
-	if err := ioutil.WriteFile(gen.Destination+"/.cgen.yaml", ans, 0644); err != nil {
-		return err
-	}
+  if err := gen.Project.SaveState(); err != nil {
+    return err
+  }
 
 	if !gen.Options.PerformUpgrade {
 		// run scripts in config.run_after array.
@@ -266,10 +233,10 @@ func (gen *Generator) Exec() error {
 
 // Pull from remote repository
 func (gen *Generator) Pull() error {
-  Log.Info("pull", fmt.Sprintf("performing git pull in: %s", gen.Source))
+  Log.Info("pull", fmt.Sprintf("performing git pull in: %s", gen.Template.Directory))
   GitPull := templates.CommandOptions{
     Cmd:       "git pull",
-    Dir: gen.Source,
+    Dir: gen.Template.Directory.ToString(),
 		UseStdOut: true,
 	}
   _, err := templates.Run(GitPull)
@@ -363,7 +330,7 @@ func (gen *Generator) WalkFiles(inPath string, file os.FileInfo, err error) erro
 
 	Log.Info("walk_files", fmt.Sprintf("source %s", inPath))
 
-	outPath := strings.Replace(inPath, gen.TemplateFiles, gen.Destination, 1)
+	outPath := strings.Replace(inPath, gen.Template.Files, gen.Project.Directory, 1)
 
 	if err := os.MkdirAll(filepath.Dir(outPath), 0700); err != nil {
 		return err
@@ -373,7 +340,7 @@ func (gen *Generator) WalkFiles(inPath string, file os.FileInfo, err error) erro
 		Log.Info("walk_files", fmt.Sprintf("expanding template %s", outPath))
 		outPath = strings.Replace(outPath, filepath.Ext(outPath), "", 1)
 
-		generated, err := templates.ExpandFile(inPath, gen.TemplateHelpers)
+		generated, err := templates.ExpandFile(inPath, gen.Project.helpers)
 		if err != nil {
 			return err
 		}
@@ -429,7 +396,7 @@ func (gen *Generator) WalkFiles(inPath string, file os.FileInfo, err error) erro
 
 // Prompt user to respond in the console.
 func (gen *Generator) Prompt() error {
-	for _, q := range gen.Config.Questions {
+	for _, q := range gen.Template.Questions {
 		res, err := gen.Ask(*q)
 		Log.Info("prompt", fmt.Sprintf("%s: %q\n", q.Name, res))
 		if err != nil {
@@ -447,7 +414,7 @@ func (gen *Generator) Ask(q Question) (answer string, err error) {
 		return gen.AppendAnswer(q.Name, val), nil
 	}
 
-	if val := gen.Answers[q.Name]; val != nil {
+	if val := gen.Project.State.Answers[q.Name]; val != nil {
 		return fmt.Sprintf("%v", val), nil
 	}
 
@@ -499,20 +466,20 @@ func (gen *Generator) Ask(q Question) (answer string, err error) {
 	return gen.AppendAnswer(q.Name, answer), nil
 }
 
-// AppendAnswer to gen.Answers map
+// AppendAnswer to gen.Project.State.Answers map
 func (gen *Generator) AppendAnswer(key, val string) (answer string) {
 	// Log.Info("answer_file", fmt.Sprintf("%v: %v", key, val))
-	if gen.Answers == nil {
-		gen.Answers = make(map[string]interface{})
+	if gen.Project.State.Answers == nil {
+		gen.Project.State.Answers = make(map[string]interface{})
 	}
 	// append answer to the answers map.
 	switch val {
 	case "true":
-		gen.Answers[key] = "true"
+		gen.Project.State.Answers[key] = "true"
 	case "false":
-		gen.Answers[key] = ""
+		gen.Project.State.Answers[key] = ""
 	default:
-		gen.Answers[key] = val
+		gen.Project.State.Answers[key] = val
 	}
 
 	gen.Variables.Set(templates.Variable{
@@ -524,23 +491,12 @@ func (gen *Generator) AppendAnswer(key, val string) (answer string) {
 	return val
 }
 
-// Save yaml output
-func (gen *Generator) Save() (out []byte, err error) {
-	output := Output{}
-	output.Answers = gen.Answers
-	output.Template = gen.TemplateName
-
-	res, err := yaml.Marshal(output)
-	fmt.Println(string(res))
-	return res, err
-}
-
 // RunAfter runs all commands found in config.yaml run_after prop.
 func (gen *Generator) RunAfter() (err error) {
-	for _, cmd := range gen.Config.RunAfter {
+	for _, cmd := range gen.Template.RunAfter {
 		var command string
 
-		if command, err = templates.Expand(cmd, gen.TemplateHelpers); err != nil {
+		if command, err = templates.Expand(cmd, gen.Project.helpers); err != nil {
 			return err
 		}
 
@@ -548,7 +504,7 @@ func (gen *Generator) RunAfter() (err error) {
 
 		Command := templates.CommandOptions{
 			Cmd:       command,
-			Dir:       gen.Destination,
+			Dir:       gen.Project.Directory,
 			UseStdOut: true,
 		}
 
@@ -561,10 +517,10 @@ func (gen *Generator) RunAfter() (err error) {
 
 // RunAfter runs all commands found in config.yaml run_after prop.
 func (gen *Generator) RunBefore() (err error) {
-	for _, cmd := range gen.Config.RunBefore {
+	for _, cmd := range gen.Template.RunBefore {
 		var command string
 
-		if command, err = templates.Expand(cmd, gen.TemplateHelpers); err != nil {
+		if command, err = templates.Expand(cmd, gen.Project.helpers); err != nil {
 			return err
 		}
 
@@ -572,7 +528,7 @@ func (gen *Generator) RunBefore() (err error) {
 
 		Command := templates.CommandOptions{
 			Cmd:       command,
-			Dir:       gen.Destination,
+			Dir:       gen.Project.Directory,
 			UseStdOut: true,
 		}
 
@@ -581,28 +537,4 @@ func (gen *Generator) RunBefore() (err error) {
 		}
 	}
 	return err
-}
-
-// LoadHelpers adds additional helper functions
-func (gen *Generator) LoadHelpers() templates.Functions {
-	helpers := &gen.Variables.Functions
-
-	// Custom Generator Functions
-	helpers.Add("MkdirAll", func(dir string) string {
-		path := filepath.Join(gen.Destination, dir)
-		if err := os.MkdirAll(path, 0700); err != nil {
-			Log.Info("error", fmt.Sprintf("%v", err))
-		}
-		return ""
-	})
-
-	helpers.Add("Touch", func(file string) string {
-		path := filepath.Join(gen.Destination, file)
-		if _, err := os.Create(path); err != nil {
-			Log.Info("error", fmt.Sprintf("%v", err))
-		}
-		return ""
-	})
-
-	return *helpers
 }

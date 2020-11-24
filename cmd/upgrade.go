@@ -35,8 +35,7 @@ var upgradeCmd = &cobra.Command{
 		}
 
 		params := app.GeneratorParams{
-			TemplatesDir:   cgen.TemplatesDir,  // directory of all cgen templates
-			Destination:    utils.PathTo(dest), // destination directory for generated files
+			ProjectDirectory:    utils.PathTo(dest), // destination directory for generated files
 			PerformUpgrade: true,               // perform upgrade
 			StaticOnly:     !expand,            // only copy static files, no template interpolation
 			Verbose:        true,               // use verbose logging

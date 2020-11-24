@@ -47,8 +47,7 @@ func doPromote(cmd *cobra.Command, args []string) {
 	}
 
 	params := app.GeneratorParams{
-		TemplatesDir:   cgen.TemplatesDir, // directory of all cgen templates
-		Destination:    utils.PathTo(src), // destination directory for generated files
+		ProjectDirectory:    utils.PathTo(src), // destination directory for generated files
 		PerformUpgrade: false,             // run in upgrade mode
 		PromoteFile:    true,              // run file promotion mode
 		StaticOnly:     true,              // only copy static files, no template interpolation
@@ -60,8 +59,8 @@ func doPromote(cmd *cobra.Command, args []string) {
 	}
 
 	for _, file := range file {
-		var source = path.Join(cgen.Generator.Destination, file)
-		var template = path.Join(cgen.Generator.Source, "template", file)
+		var source = path.Join(cgen.Generator.Project.Directory, file)
+		var template = path.Join(cgen.Generator.Template.Files, file)
 
 		if asTemplate {
 			template = fmt.Sprintf("%v.tmpl", template)
