@@ -31,7 +31,6 @@ type Question struct {
 type Generator struct {
   Template         Template `json:"template"`
   Project          Project `json:"template"`
-  Variables        templates.Variables
 	Options          struct {
 		StaticOnly     bool `json:"StaticOnly"`
 		PerformUpgrade bool `json:"PerformUpgrade"`
@@ -97,13 +96,6 @@ func (gen *Generator) Init(params GeneratorParams) error {
     }
     gen.Template.toJSON()
 
-		for k, v := range gen.Project.State.Answers {
-			gen.AppendAnswer(k, fmt.Sprintf("%v", v))
-			// handle `Name` as a special case, and set params from answer file.
-			if k == "Name" {
-				params.ProjectName = fmt.Sprintf("%v", v)
-			}
-    }
     return nil
   }
 
@@ -133,9 +125,9 @@ func (gen *Generator) Init(params GeneratorParams) error {
   }
   gen.Project.toJSON()
 
-	gen.AppendAnswer("Name", gen.Project.Name)
-	// gen.AppendAnswer("TemplateVersion", gen.Template.TemplateVersion)
-  // gen.AppendAnswer("Timestamp", time.Now().UTC().Format(time.RFC3339))
+	gen.Project.AppendAnswer("Name", gen.Project.Name)
+	// gen.Project.AppendAnswer("TemplateVersion", gen.Template.TemplateVersion)
+  // gen.Project.AppendAnswer("Timestamp", time.Now().UTC().Format(time.RFC3339))
 
   gen.Project.variables.Set(templates.Variable{
 		Key:         "PWD",
@@ -411,7 +403,7 @@ func (gen *Generator) Prompt() error {
 func (gen *Generator) Ask(q Question) (answer string, err error) {
 
 	if val := os.Getenv(q.Name); val != "" {
-		return gen.AppendAnswer(q.Name, val), nil
+		return gen.Project.AppendAnswer(q.Name, val), nil
 	}
 
 	if val := gen.Project.State.Answers[q.Name]; val != nil {
@@ -463,32 +455,7 @@ func (gen *Generator) Ask(q Question) (answer string, err error) {
 		return "", err
 	}
 
-	return gen.AppendAnswer(q.Name, answer), nil
-}
-
-// AppendAnswer to gen.Project.State.Answers map
-func (gen *Generator) AppendAnswer(key, val string) (answer string) {
-	// Log.Info("answer_file", fmt.Sprintf("%v: %v", key, val))
-	if gen.Project.State.Answers == nil {
-		gen.Project.State.Answers = make(map[string]interface{})
-	}
-	// append answer to the answers map.
-	switch val {
-	case "true":
-		gen.Project.State.Answers[key] = "true"
-	case "false":
-		gen.Project.State.Answers[key] = ""
-	default:
-		gen.Project.State.Answers[key] = val
-	}
-
-	gen.Variables.Set(templates.Variable{
-		Key:         key,
-		Value:       val,
-		OverrideEnv: true,
-	})
-
-	return val
+	return gen.Project.AppendAnswer(q.Name, answer), nil
 }
 
 // RunAfter runs all commands found in config.yaml run_after prop.

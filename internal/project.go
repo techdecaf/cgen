@@ -13,10 +13,11 @@ import (
 
 // ProjectState maintains last generated state by project
 type ProjectState struct {
-  Template string `yaml:"template"`
-	Version string `yaml:"version"`
+  Name      string `json:"name"`
+  Template  string `yaml:"template"`
+	Version   string `yaml:"version"`
 	Timestamp string `yaml:"timestamp"`
-  Answers  map[string]interface{} `yaml:"answers"`
+  Answers   map[string]interface{} `yaml:"answers"`
 }
 
 // Project struct
@@ -52,12 +53,46 @@ func (proj *Project) Init() error {
     yaml.Unmarshal(byteValue, &state)
     // load new state into current state
     proj.State = state
+
+    for k, v := range proj.State.Answers {
+			proj.AppendAnswer(k, fmt.Sprintf("%v", v))
+    }
+  }
+
+  if proj.State.Name != "" {
+    proj.Name = proj.State.Name
+  } else {
+    proj.State.Name = proj.Name
   }
 
   proj.variables.Init()
   proj.LoadHelpers()
 
   return nil
+}
+
+// AppendAnswer to proj.State.Answers map
+func (proj *Project) AppendAnswer(key, val string) (answer string) {
+	if proj.State.Answers == nil {
+		proj.State.Answers = make(map[string]interface{})
+	}
+	// append answer to the answers map.
+	switch val {
+	case "true":
+		proj.State.Answers[key] = "true"
+	case "false":
+		proj.State.Answers[key] = ""
+	default:
+		proj.State.Answers[key] = val
+	}
+
+	proj.variables.Set(templates.Variable{
+		Key:         key,
+		Value:       val,
+		OverrideEnv: true,
+	})
+
+	return val
 }
 
 // SaveState yaml output
