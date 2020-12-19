@@ -16,16 +16,17 @@ type Template struct {
   CgenVersion     string        `yaml:"cgen_version"`
   Extends         string        `yaml:"extends"`
   Variables       yaml.MapSlice `yaml:"variables"`
-	Questions       []*Question   `yaml:"questions"`
+  Questions       []*Question   `yaml:"questions"`
+  TemplateFiles   []string      `yaml:"template_files"`
 	RunAfter        []string      `yaml:"run_after"`
   RunBefore       []string      `yaml:"run_before"`
   // private properties
-  Name            string
-  LatestVersion    string
-  LatestStableVersion    string
-  Directory       git.Repository
-  Files            string
-  ConfigFile           string
+  Name                  string
+  LatestVersion         string
+  LatestStableVersion   string
+  Directory             git.Repository
+  Files                 string
+  ConfigFile             string
 }
 
 // Init values for template
@@ -74,6 +75,26 @@ func (template *Template) Init() error {
   template.LatestStableVersion = stable
 
   return nil
+}
+
+// FileIsTemplate checks to see if file has been marked as a template and should be expanded
+func(template *Template) FileIsTemplate(filePath string) (bool,error) {
+  if filepath.Ext(filePath) == ".tmpl" {
+    return true, nil
+  }
+
+  relPath, err := filepath.Rel(template.Files, filePath)
+  if err != nil {
+    return false, err
+  }
+
+  for _, match := range template.TemplateFiles {
+    if match == relPath {
+        return true, nil
+    }
+  }
+
+  return false, err
 }
 
 func (template *Template) toJSON() error {
