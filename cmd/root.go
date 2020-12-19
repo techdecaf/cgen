@@ -36,9 +36,11 @@ var rootCmd = &cobra.Command{
 
 		// Print Version
 		if version, _ = cmd.Flags().GetBool("version"); version {
-			fmt.Println(VERSION)
+      fmt.Println(VERSION)
 			os.Exit(0)
-		}
+    }
+
+    ignoreTolerance, _ := cmd.Flags().GetBool("ignore-version-tolerance")
 
 		if name, err = cmd.Flags().GetString("name"); err != nil {
 			app.Log.Fatal("cmd_flags", err)
@@ -134,7 +136,7 @@ var rootCmd = &cobra.Command{
         app.Log.Fatal("tolerance_check", err)
       }
 
-      if inTolerance(currentVersion) == false {
+      if inTolerance(currentVersion) == false && ignoreTolerance == false {
         readmeURL := "https://github.com/techdecaf/cgen#download-and-install"
         message := fmt.Sprintf("this template requires cgen %s, you are currently running %s. Go here to upgrade: %s", requiredRange, currentVersion, readmeURL )
         app.Log.Fatal("tolerance_check", message)
@@ -176,6 +178,7 @@ func init() {
 	rootCmd.Flags().StringP("name", "n", "", "what do you want to call your newly generated project?")
 	rootCmd.Flags().StringP("template", "t", "", "specify a which template you would like to use.")
   rootCmd.Flags().StringP("path", "p", pwd, "where you would like to generate your project.")
+  rootCmd.Flags().Bool("ignore-version-tolerance", true, "skips cgen version tolerance check")
 
   // rootCmd.MarkFlagRequired("path")
 }

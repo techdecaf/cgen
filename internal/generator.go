@@ -30,7 +30,7 @@ type Question struct {
 // Generator struct
 type Generator struct {
   Template         Template `json:"template"`
-  Project          Project `json:"template"`
+  Project          Project `json:"project"`
 	Options          struct {
 		StaticOnly     bool `json:"StaticOnly"`
 		PerformUpgrade bool `json:"PerformUpgrade"`
@@ -266,11 +266,12 @@ func (gen *Generator) Copy(src, dst string) error {
 	return out.Close()
 }
 
-type AppConfigProperties map[string]string
+// ConfigProperties forgot
+type ConfigProperties map[string]string
 
 // ReadPropertiesFile reads props
-func ReadPropertiesFile(filename string) (AppConfigProperties, error) {
-	config := AppConfigProperties{}
+func ReadPropertiesFile(filename string) (ConfigProperties, error) {
+	config := ConfigProperties{}
 
 	if len(filename) == 0 {
 		return config, nil
@@ -482,7 +483,7 @@ func (gen *Generator) RunAfter() (err error) {
 	return err
 }
 
-// RunAfter runs all commands found in config.yaml run_after prop.
+// RunBefore runs all commands found in config.yaml run_before prop.
 func (gen *Generator) RunBefore() (err error) {
 	for _, cmd := range gen.Template.RunBefore {
 		var command string
