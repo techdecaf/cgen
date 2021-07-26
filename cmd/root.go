@@ -36,11 +36,16 @@ var rootCmd = &cobra.Command{
 
 		// Print Version
 		if version, _ = cmd.Flags().GetBool("version"); version {
-      fmt.Println(VERSION)
+			fmt.Println(VERSION)
 			os.Exit(0)
-    }
+		}
 
-    ignoreTolerance, _ := cmd.Flags().GetBool("ignore-version-tolerance")
+		cliVars, err := cmd.Flags().GetStringToString("var")
+		if err != nil {
+			app.Log.Fatal("cmd_flags", "failed to set cli variables")
+		}
+
+		ignoreTolerance, _ := cmd.Flags().GetBool("ignore-version-tolerance")
 
 		if name, err = cmd.Flags().GetString("name"); err != nil {
 			app.Log.Fatal("cmd_flags", err)
@@ -65,7 +70,7 @@ var rootCmd = &cobra.Command{
 		// initialize a new instance of cgen
 		if err := cgen.Init(); err != nil {
 			app.Log.Fatal("cgen_init", err)
-    }
+		}
 
 		// list all available generators
 		generators, err := cgen.ListInstalled()
@@ -86,8 +91,14 @@ var rootCmd = &cobra.Command{
 		here, err := utils.EnsureDir(dest)
 		if err != nil {
 			app.Log.Fatal("current_dir", err)
-    }
+		}
 
+		// set project answers from cli args
+		for key, val := range cliVars {
+			cgen.Generator.Project.AppendAnswer(key, val)
+		}
+
+		// start asking questions we don't yet know the answers for
 		if name == "" {
 			name, err = cgen.Generator.Ask(app.Question{
 				Name:    "Name",
@@ -107,41 +118,41 @@ var rootCmd = &cobra.Command{
 		}
 
 		params := app.GeneratorParams{
-			ProjectName:           name,              // name of this project
-			TemplateName:        template,          // selected cgen template
-			ProjectDirectory:    dest,              // destination directory for generated files
-			PerformUpgrade: false,             // perform upgrade
-			StaticOnly:     false,             // only copy static files, no template interpolation
-			Verbose:        true,              // use verbose logging
+			ProjectName:      name,     // name of this project
+			TemplateName:     template, // selected cgen template
+			ProjectDirectory: dest,     // destination directory for generated files
+			PerformUpgrade:   false,    // perform upgrade
+			StaticOnly:       false,    // only copy static files, no template interpolation
+			Verbose:          true,     // use verbose logging
 		}
 
 		if err := cgen.Generator.Init(params); err != nil {
 			app.Log.Fatal("generator_init", err)
-    }
+		}
 
-    // if gen.Config.CgenVersion is newer than the current running version of cgen, prompt the user to upgrade.
-    if cgen.Generator.Template.CgenVersion != "" {
-      var err error
-      var currentVersion semver.Version
-      var inTolerance semver.Range
+		// if gen.Config.CgenVersion is newer than the current running version of cgen, prompt the user to upgrade.
+		if cgen.Generator.Template.CgenVersion != "" {
+			var err error
+			var currentVersion semver.Version
+			var inTolerance semver.Range
 
-      cgenVersion := strings.ReplaceAll(VERSION, "v", "")
-      requiredRange := cgen.Generator.Template.CgenVersion
+			cgenVersion := strings.ReplaceAll(VERSION, "v", "")
+			requiredRange := cgen.Generator.Template.CgenVersion
 
-      if currentVersion, err = semver.Parse(cgenVersion); err != nil {
-        app.Log.Info("version_check", fmt.Sprintf("could not parse application version %s", cgenVersion))
-      }
+			if currentVersion, err = semver.Parse(cgenVersion); err != nil {
+				app.Log.Info("version_check", fmt.Sprintf("could not parse application version %s", cgenVersion))
+			}
 
-      if inTolerance, err = semver.ParseRange(requiredRange); err != nil {
-        app.Log.Fatal("tolerance_check", err)
-      }
+			if inTolerance, err = semver.ParseRange(requiredRange); err != nil {
+				app.Log.Fatal("tolerance_check", err)
+			}
 
-      if inTolerance(currentVersion) == false && ignoreTolerance == false {
-        readmeURL := "https://github.com/techdecaf/cgen#download-and-install"
-        message := fmt.Sprintf("this template requires cgen %s, you are currently running %s. Go here to upgrade: %s", requiredRange, currentVersion, readmeURL )
-        app.Log.Fatal("tolerance_check", message)
-      }
-    }
+			if inTolerance(currentVersion) == false && ignoreTolerance == false {
+				readmeURL := "https://github.com/techdecaf/cgen#download-and-install"
+				message := fmt.Sprintf("this template requires cgen %s, you are currently running %s. Go here to upgrade: %s", requiredRange, currentVersion, readmeURL)
+				app.Log.Fatal("tolerance_check", message)
+			}
+		}
 
 		if err := cgen.Generator.Exec(); err != nil {
 			app.Log.Fatal("generator_exec", err)
@@ -160,6 +171,7 @@ func Execute() {
 }
 
 func init() {
+	var variables map[string]string
 	cobra.OnInitialize(initConfig)
 
 	// Here you will define your flags and configuration settings.
@@ -177,10 +189,11 @@ func init() {
 
 	rootCmd.Flags().StringP("name", "n", "", "what do you want to call your newly generated project?")
 	rootCmd.Flags().StringP("template", "t", "", "specify a which template you would like to use.")
-  rootCmd.Flags().StringP("path", "p", pwd, "where you would like to generate your project.")
-  rootCmd.Flags().Bool("ignore-version-tolerance", true, "skips cgen version tolerance check")
+	rootCmd.Flags().StringP("path", "p", pwd, "where you would like to generate your project.")
+	rootCmd.Flags().Bool("ignore-version-tolerance", true, "skips cgen version tolerance check")
+	rootCmd.Flags().StringToStringVar(&variables, "var", nil, "overwrite environmental variables")
 
-  // rootCmd.MarkFlagRequired("path")
+	// rootCmd.MarkFlagRequired("path")
 }
 
 // initConfig reads in config file and ENV variables if set.
