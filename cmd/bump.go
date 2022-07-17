@@ -11,8 +11,8 @@ import (
 // bumpCmd represents the bump command
 var bumpCmd = &cobra.Command{
 	Use:   "bump",
-	Short: "Creates a new git tag with an increase in the current semversion i.e. v1.0.2",
-	Long:  `Creates a new git tag with an increase in the current semversion i.e. v1.0.2`,
+	Short: "Creates a new git tag with an increase in the current semantic version i.e. v1.0.2",
+	Long:  `Creates a new git tag with an increase in the current semantic version i.e. v1.0.2`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// parse flags
 		var level, pattern string

@@ -13,62 +13,62 @@ import (
 
 // ProjectState maintains last generated state by project
 type ProjectState struct {
-  Name      string `json:"name"`
-  Template  string `yaml:"template"`
-	Version   string `yaml:"version"`
-	Timestamp string `yaml:"timestamp"`
-  Answers   map[string]interface{} `yaml:"answers"`
+	Name      string                 `json:"name"`
+	Template  string                 `yaml:"template"`
+	Version   string                 `yaml:"version"`
+	Timestamp string                 `yaml:"timestamp"`
+	Answers   map[string]interface{} `yaml:"answers"`
 }
 
 // Project struct
 type Project struct {
-  Name       string
-  Directory  string
-  State      ProjectState
-  // private properties
-  helpers    templates.Functions
-  variables  templates.Variables
-  StateFile  string
+	Name      string
+	Directory string
+	State     ProjectState
+	// private properties
+	helpers   templates.Functions
+	variables templates.Variables
+	StateFile string
 }
 
 // Init a new instance of Generator
 func (proj *Project) Init() error {
-  state := Project{}.State
+	state := Project{}.State
 
-  if proj.Directory == "" {
-    return fmt.Errorf("can not init a new project without a directory")
-  }
+	if proj.Directory == "" {
+		return fmt.Errorf("can not init a new project without a directory")
+	}
 
-  proj.StateFile = filepath.Join(proj.Directory, ".cgen.yaml")
+	proj.StateFile = filepath.Join(proj.Directory, ".cgen.yaml")
 
-  // if stateFile exists read it in and load saved values
-  if _, err := os.Stat(proj.StateFile); err == nil {
-    readState, err := os.Open(proj.StateFile);
-    if err != nil {
-      return err
-    }
+	// if stateFile exists read it in and load saved values
+	if _, err := os.Stat(proj.StateFile); err == nil {
+		readState, err := os.Open(proj.StateFile)
+		if err != nil {
+			return err
+		}
 
-    defer readState.Close()
-    byteValue, _ := ioutil.ReadAll(readState)
-    yaml.Unmarshal(byteValue, &state)
-    // load new state into current state
-    proj.State = state
+		defer readState.Close()
+		byteValue, _ := ioutil.ReadAll(readState)
+		yaml.Unmarshal(byteValue, &state)
+		// load new state into current state
+		proj.State = state
 
-    for k, v := range proj.State.Answers {
+		for k, v := range proj.State.Answers {
 			proj.AppendAnswer(k, fmt.Sprintf("%v", v))
-    }
-  }
+		}
+	}
 
-  if proj.State.Name != "" {
-    proj.Name = proj.State.Name
-  } else {
-    proj.State.Name = proj.Name
-  }
+	if proj.State.Name != "" {
+		proj.Name = proj.State.Name
+	} else {
+		proj.State.Name = proj.Name
+	}
 
-  proj.variables.Init()
-  proj.LoadHelpers()
+	proj.variables.Init()
+	proj.LoadHelpers()
 
-  return nil
+	return nil
 }
 
 // AppendAnswer to proj.State.Answers map
@@ -97,16 +97,16 @@ func (proj *Project) AppendAnswer(key, val string) (answer string) {
 
 // SaveState yaml output
 func (proj *Project) SaveState() (err error) {
-  state, err := yaml.Marshal(&proj.State)
-  if err != nil {
-    return err
-  }
+	state, err := yaml.Marshal(&proj.State)
+	if err != nil {
+		return err
+	}
 
-  fmt.Println(string(state))
+	fmt.Println(string(state))
 
 	if err := ioutil.WriteFile(proj.StateFile, state, 0644); err != nil {
 		return err
-  }
+	}
 
 	return err
 }
@@ -130,10 +130,9 @@ func (proj *Project) LoadHelpers() {
 			Log.Info("error", fmt.Sprintf("%v", err))
 		}
 		return ""
-  })
-  proj.helpers = *helpers
+	})
+	proj.helpers = *helpers
 }
-
 
 func (proj *Project) toJSON() error {
 	out, err := json.Marshal(proj)

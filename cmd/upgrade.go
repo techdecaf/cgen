@@ -19,7 +19,7 @@ var upgradeCmd = &cobra.Command{
 
 		if expand, err = cmd.Flags().GetBool("expand"); err != nil {
 			app.Log.Fatal("cmd_flags", err)
-    }
+		}
 
 		if offline, err = cmd.Flags().GetBool("offline"); err != nil {
 			app.Log.Fatal("cmd_flags", err)
@@ -35,21 +35,21 @@ var upgradeCmd = &cobra.Command{
 		}
 
 		params := app.GeneratorParams{
-			ProjectDirectory:    utils.PathTo(dest), // destination directory for generated files
-			PerformUpgrade: true,               // perform upgrade
-			StaticOnly:     !expand,            // only copy static files, no template interpolation
-			Verbose:        true,               // use verbose logging
+			ProjectDirectory: utils.PathTo(dest), // destination directory for generated files
+			PerformUpgrade:   true,               // perform upgrade
+			StaticOnly:       !expand,            // only copy static files, no template interpolation
+			Verbose:          true,               // use verbose logging
 		}
 
 		if err := cgen.Generator.Init(params); err != nil {
 			app.Log.Fatal("generator_init", err)
 		}
 
-    if !offline {
-      if err := cgen.Generator.Pull(); err != nil {
-        app.Log.Fatal("generator_pull", err)
-      }
-    }
+		if !offline {
+			if err := cgen.Generator.Pull(); err != nil {
+				app.Log.Fatal("generator_pull", err)
+			}
+		}
 
 		if err := cgen.Generator.Exec(); err != nil {
 			app.Log.Fatal("generator_exec", err)

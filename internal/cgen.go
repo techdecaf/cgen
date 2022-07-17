@@ -38,10 +38,9 @@ func (app *CGen) Init() (err error) {
 	usr, err := user.Current()
 	if err != nil {
 		return err
-  }
-  ApplicationDirectory = filepath.Join(usr.HomeDir, ".cgen")
-  TemplatesDirectory = filepath.Join(ApplicationDirectory, "generators")
-
+	}
+	ApplicationDirectory = filepath.Join(usr.HomeDir, ".cgen")
+	TemplatesDirectory = filepath.Join(ApplicationDirectory, "generators")
 
 	app.BaseDir = ApplicationDirectory
 	app.TemplatesDir = TemplatesDirectory
@@ -62,17 +61,17 @@ func (app *CGen) Init() (err error) {
 func (app *CGen) Install(url string) (out string, err error) {
 	// what to name the generator dir.
 	as := strings.TrimSuffix(filepath.Base(url), filepath.Ext(url))
-  dir := filepath.Join(app.TemplatesDir, as)
+	dir := filepath.Join(app.TemplatesDir, as)
 
-  GitCommand := templates.CommandOptions{
+	GitCommand := templates.CommandOptions{
 		UseStdOut: true,
 	}
 
-  if _, err := os.Stat(dir); os.IsNotExist(err) {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		GitCommand.Cmd = fmt.Sprintf("git clone '%s' '%s'", url, dir)
 	} else {
-    GitCommand.Cmd = fmt.Sprintf("cd '%s' && git pull", dir)
-  }
+		GitCommand.Cmd = fmt.Sprintf("cd '%s' && git pull", dir)
+	}
 
 	return templates.Run(GitCommand)
 }

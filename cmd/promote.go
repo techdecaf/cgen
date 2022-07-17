@@ -47,11 +47,11 @@ func doPromote(cmd *cobra.Command, args []string) {
 	}
 
 	params := app.GeneratorParams{
-		ProjectDirectory:    utils.PathTo(src), // destination directory for generated files
-		PerformUpgrade: false,             // run in upgrade mode
-		PromoteFile:    true,              // run file promotion mode
-		StaticOnly:     true,              // only copy static files, no template interpolation
-		Verbose:        true,              // use verbose logging
+		ProjectDirectory: utils.PathTo(src), // destination directory for generated files
+		PerformUpgrade:   false,             // run in upgrade mode
+		PromoteFile:      true,              // run file promotion mode
+		StaticOnly:       true,              // only copy static files, no template interpolation
+		Verbose:          true,              // use verbose logging
 	}
 
 	if err := cgen.Generator.Init(params); err != nil {
