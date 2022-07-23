@@ -46,7 +46,7 @@ Usage:
   cgen [command]
 
 Available Commands:
-  bump        Creates a new git tag with an increase in the current semversion i.e. v1.0.2
+  bump        Creates a new git tag with an increase in the current semantic version i.e. v1.0.2
   completion  Generates zsh completion scripts
   help        Help about any command
   install     Installs a new generator from a git repository
@@ -55,13 +55,15 @@ Available Commands:
   upgrade     this features is not currently supported pull request?
 
 Flags:
-  -h, --help              help for cgen
-  -n, --name string       what do you want to call your newly generated project?
-  -p, --path string       where you would like to generate your project. (default "/Users/ward/@decaf/cli/cgen")
-  -s, --static-only       does not generate template files (most commonly used with update)
-  -t, --template string   specify a which template you would like to use.
-      --verbose           enable verbose log messages
-  -v, --version           prints the cgen version number
+  -h, --help                       help for cgen
+      --ignore-version-tolerance   skips cgen version tolerance check (default true)
+  -n, --name string                what do you want to call your newly generated project?
+  -p, --path string                where you would like to generate your project. (default "/Users/ward/@decaf/cgen")
+  -s, --static-only                does not generate template files (most commonly used with update)
+  -t, --template string            specify a which template you would like to use.
+      --var stringToString         overwrite environmental variables (default [])
+      --verbose                    enable verbose log messages
+  -v, --version                    prints the cgen version number
 
 Use "cgen [command] --help" for more information about a command.
 ```
